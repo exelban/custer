@@ -49,13 +49,14 @@ protocol playerDelegate {
 internal class Player: NSObject {
     public static let shared = Player()
     public var delegate: playerDelegate? = nil
+    public var volume: Float = store.float(key: "volume", defaultValue: 0.8)
     
     private var player = AVPlayer()
     private var observer: NSObjectProtocol?
     
     private var uri: String? = nil
-    public var volume: Float = store.float(key: "volume", defaultValue: 0.8)
     private var volumeSet: Bool = false
+    private var pauseTimestamp: Date? = nil
     
     private var error: String? = nil {
         didSet {
@@ -153,6 +154,14 @@ internal class Player: NSObject {
             return
         }
         
+        if self.pauseTimestamp != nil {
+            let interval = abs(self.pauseTimestamp!.timeIntervalSinceNow)
+            
+            if interval > 60*3 {
+                self.reset()
+            }
+        }
+        
         self.player.play()
         self.state = .playing
         os_log(.debug, log: log, "player is playing")
@@ -165,6 +174,7 @@ internal class Player: NSObject {
         
         self.player.pause()
         self.state = .paused
+        self.pauseTimestamp = Date()
         os_log(.debug, log: log, "player is paused")
     }
     
