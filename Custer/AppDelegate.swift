@@ -1,6 +1,6 @@
 //
 //  AppDelegate.swift
-//  mRadio
+//  custer
 //
 //  Created by Serhiy Mytrovtsiy on 07/06/2020.
 //  Using Swift 5.0.
@@ -12,7 +12,7 @@
 import Cocoa
 import os.log
 
-let log = OSLog(subsystem: Bundle.main.bundleIdentifier!, category: "mRadio")
+let log = OSLog(subsystem: Bundle.main.bundleIdentifier!, category: "custer")
 var store: Store = Store()
 var uri: String {
     get {
@@ -32,7 +32,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, playerDelegate {
     private let menu: NSMenu = Menu()
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        self.menuBarItem.autosaveName = "mRadio"
+        self.menuBarItem.autosaveName = "custer"
         
         self.menuBarItem.button?.sendAction(on: [.leftMouseDown, .rightMouseDown])
         self.menuBarItem.button?.action = #selector(click(_:))

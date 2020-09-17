@@ -1,6 +1,6 @@
 //
 //  menu.swift
-//  mRadio
+//  custer
 //
 //  Created by Serhiy Mytrovtsiy on 07/06/2020.
 //  Using Swift 5.0.
@@ -67,7 +67,7 @@ internal class Menu: NSMenu {
         self.addItem(iconInDock)
         
         self.addItem(NSMenuItem.separator())
-        self.addItem(NSMenuItem(title: "Quit mRadio", action: #selector(NSApplication.terminate(_:)), keyEquivalent: ""))
+        self.addItem(NSMenuItem(title: "Quit Custer", action: #selector(NSApplication.terminate(_:)), keyEquivalent: ""))
     }
     
     required init(coder: NSCoder) {
