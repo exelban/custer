@@ -50,9 +50,11 @@ internal class Player: NSObject {
     public static let shared = Player()
     public var delegate: playerDelegate? = nil
     public var volume: Float = store.float(key: "volume", defaultValue: 0.8)
+    public var buffer: (_ total: Double, _ current: Double) -> Void = {_,_ in }
     
     private var player = AVPlayer()
     private var observer: NSObjectProtocol?
+    private var bufferObserver: Any!
     
     private var uri: String? = nil
     private var volumeSet: Bool = false
@@ -95,6 +97,11 @@ internal class Player: NSObject {
     deinit {
         guard self.observer != nil else {
             return
+        }
+        
+        if self.bufferObserver != nil {
+            self.player.removeTimeObserver(self.bufferObserver!)
+            self.bufferObserver = nil
         }
         
         NotificationCenter.default.removeObserver(self.observer!)
@@ -154,17 +161,19 @@ internal class Player: NSObject {
             return
         }
         
-        if self.pauseTimestamp != nil {
-            let interval = abs(self.pauseTimestamp!.timeIntervalSinceNow)
-            
-            if interval > 60*3 {
-                self.reset()
-            }
+        if self.pauseTimestamp != nil && abs(self.pauseTimestamp!.timeIntervalSinceNow) > 60*3 {
+            self.pauseTimestamp = nil
+            self.reset(play: true)
+        } else {
+            self.player.play()
         }
         
-        self.player.play()
         self.state = .playing
         os_log(.debug, log: log, "player is playing")
+        
+        self.bufferObserver = self.player.addPeriodicTimeObserver(forInterval: CMTimeMake(value: 1, timescale: 10), queue: DispatchQueue.main) { [weak self] time in
+            self?.buffer(self?.player.currentItem?.totalBuffer() ?? -1, self?.player.currentItem?.currentBuffer() ?? -1)
+        }
     }
     
     public func pause() {

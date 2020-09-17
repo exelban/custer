@@ -14,6 +14,15 @@ import os.log
 
 let log = OSLog(subsystem: Bundle.main.bundleIdentifier!, category: "mRadio")
 var store: Store = Store()
+var uri: String {
+    get {
+        return store.string(key: "url", defaultValue: "https://n-6-12.dcs.redcdn.pl/sc/o2/Eurozet/live/audio.livx")
+    }
+    set {
+        store.set(key: "url", value: newValue)
+        Player.shared.setURL(newValue)
+    }
+}
 
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate, playerDelegate {
@@ -29,11 +38,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, playerDelegate {
         self.menuBarItem.button?.action = #selector(click(_:))
         
         Player.shared.delegate = self
-        Player.shared.setURL("https://n-6-12.dcs.redcdn.pl/sc/o2/Eurozet/live/audio.livx")
+        Player.shared.setURL(uri)
         
         if !store.exist(key: "runAtLoginInitialized") {
             store.set(key: "runAtLoginInitialized", value: true)
             LaunchAtLogin.isEnabled = true
+        }
+        
+        if store.exist(key: "icon") {
+            let dockIconStatus = store.bool(key: "icon", defaultValue: false) ? NSApplication.ActivationPolicy.regular : NSApplication.ActivationPolicy.accessory
+            NSApp.setActivationPolicy(dockIconStatus)
         }
     }
     

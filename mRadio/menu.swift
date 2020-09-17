@@ -37,9 +37,19 @@ internal class Menu: NSMenu {
         
         self.addItem(NSMenuItem.separator())
         
+        let streamAddress = NSMenuItem(title: "Set stream address", action: #selector(self.showAddressView), keyEquivalent: "")
+        streamAddress.target = self
+        self.addItem(streamAddress)
+        
         let clearCache = NSMenuItem(title: "Clear cache", action: #selector(self.clearCache), keyEquivalent: "")
         clearCache.target = self
         self.addItem(clearCache)
+        
+        Player.shared.buffer = { (total, current) in
+            clearCache.title = "Clear cache (\(current.printSecondsToHoursMinutesSeconds()))"
+        }
+        
+        self.addItem(NSMenuItem.separator())
         
         let autoplay = NSMenuItem(title: "Autoplay", action: #selector(self.toggleAutoplay), keyEquivalent: "")
         autoplay.state = store.bool(key: "autoplay", defaultValue: false) ? NSControl.StateValue.on : NSControl.StateValue.off
@@ -51,6 +61,11 @@ internal class Menu: NSMenu {
         launchAtLogin.target = self
         self.addItem(launchAtLogin)
         
+        let iconInDock = NSMenuItem(title: "Show icon in dock", action: #selector(self.toggleIcon), keyEquivalent: "")
+        iconInDock.state = store.bool(key: "icon", defaultValue: false) ? NSControl.StateValue.on : NSControl.StateValue.off
+        iconInDock.target = self
+        self.addItem(iconInDock)
+        
         self.addItem(NSMenuItem.separator())
         self.addItem(NSMenuItem(title: "Quit mRadio", action: #selector(NSApplication.terminate(_:)), keyEquivalent: ""))
     }
@@ -59,23 +74,63 @@ internal class Menu: NSMenu {
         fatalError("init(coder:) has not been implemented")
     }
     
-    @objc func volumeChange(_ sender: NSSlider) {
+    @objc private func showAddressView() {
+        NSApplication.shared.activate(ignoringOtherApps: true)
+        let alert: NSAlert = NSAlert()
+        
+        alert.addButton(withTitle: "OK")
+//        alert.addButton(withTitle: "Check")
+        alert.addButton(withTitle: "Cancel")
+        alert.alertStyle = .informational
+        alert.messageText = "Stream URL"
+        
+        let input = NSTextField(frame: NSRect(x: 0, y: 0, width: 294, height: 24))
+        input.stringValue = uri
+        input.cell!.wraps = false
+        input.cell!.isScrollable = true
+        
+        alert.accessoryView = input
+        
+        switch alert.runModal() {
+        case .OK, .alertFirstButtonReturn:
+            uri = input.stringValue
+        case .alertSecondButtonReturn:
+            print("check url")
+        case .cancel, .alertThirdButtonReturn: break
+        default: break
+        }
+    }
+    
+    @objc private func volumeChange(_ sender: NSSlider) {
         Player.shared.setVolume(Float(sender.doubleValue))
         store.set(key: "volume", value: Float(sender.doubleValue))
     }
     
-    @objc func clearCache(_ sender: NSMenuItem) {
+    @objc private func clearCache(_ sender: NSMenuItem) {
         Player.shared.clearBuffer()
     }
     
-    @objc func toggleAutoplay(_ sender: NSMenuItem) {
+    @objc private func toggleAutoplay(_ sender: NSMenuItem) {
         let state = sender.state != NSControl.StateValue.on
         sender.state = sender.state == NSControl.StateValue.on ? NSControl.StateValue.off : NSControl.StateValue.on
         
         store.set(key: "autoplay", value: state)
     }
     
-    @objc func toggleLaunchAtLogin(_ sender: NSMenuItem) {
+    @objc private func toggleIcon(_ sender: NSMenuItem) {
+        let state = sender.state != NSControl.StateValue.on
+        sender.state = sender.state == NSControl.StateValue.on ? NSControl.StateValue.off : NSControl.StateValue.on
+        
+        store.set(key: "icon", value: state)
+        
+        let dockIconStatus = state ? NSApplication.ActivationPolicy.regular : NSApplication.ActivationPolicy.accessory
+        NSApp.setActivationPolicy(dockIconStatus)
+        if state {
+            NSApplication.shared.activate(ignoringOtherApps: true)
+        }
+    }
+    
+    @objc private func toggleLaunchAtLogin(_ sender: NSMenuItem) {
         let state = sender.state != NSControl.StateValue.on
         sender.state = sender.state == NSControl.StateValue.on ? NSControl.StateValue.off : NSControl.StateValue.on
         
