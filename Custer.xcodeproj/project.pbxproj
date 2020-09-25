@@ -15,7 +15,24 @@
 		9A7921C1248D518400788F2B /* libs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A7921C0248D518400788F2B /* libs.swift */; };
 		9A7921D5248D52FB00788F2B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A7921D4248D52FB00788F2B /* main.swift */; };
 		9A7921D7248D543F00788F2B /* LaunchAtLogin.app in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9A7921C6248D52E300788F2B /* LaunchAtLogin.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		9AD7A222251E80B700C99849 /* Updater.h in Headers */ = {isa = PBXBuildFile; fileRef = 9AD7A220251E80B700C99849 /* Updater.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		9AD7A225251E80B700C99849 /* Updater.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9AD7A21E251E80B700C99849 /* Updater.framework */; };
+		9AD7A226251E80B700C99849 /* Updater.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9AD7A21E251E80B700C99849 /* Updater.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		9AD7A22C251E80BF00C99849 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AD7A1C6251E780000C99849 /* main.swift */; };
+		9AD7A232251E80E100C99849 /* updater.sh in Resources */ = {isa = PBXBuildFile; fileRef = 9AD7A231251E80E100C99849 /* updater.sh */; };
+		9AD7A236251E815E00C99849 /* helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AD7A235251E815E00C99849 /* helpers.swift */; };
+		9AD7A23E251E851D00C99849 /* updater.sh in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9AD7A231251E80E100C99849 /* updater.sh */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		9AD7A223251E80B700C99849 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9A79219F248D199400788F2B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9AD7A21D251E80B700C99849;
+			remoteInfo = Updater;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		9A7921D6248D543000788F2B /* CopyFiles */ = {
@@ -25,6 +42,27 @@
 			dstSubfolderSpec = 1;
 			files = (
 				9A7921D7248D543F00788F2B /* LaunchAtLogin.app in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9AD7A213251E809100C99849 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				9AD7A226251E80B700C99849 /* Updater.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9AD7A23D251E851000C99849 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Scripts;
+			dstSubfolderSpec = 7;
+			files = (
+				9AD7A23E251E851D00C99849 /* updater.sh in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -44,6 +82,12 @@
 		9A7921CF248D52E500788F2B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9A7921D0248D52E500788F2B /* LaunchAtLogin.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LaunchAtLogin.entitlements; sourceTree = "<group>"; };
 		9A7921D4248D52FB00788F2B /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		9AD7A1C6251E780000C99849 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		9AD7A21E251E80B700C99849 /* Updater.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Updater.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		9AD7A220251E80B700C99849 /* Updater.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Updater.h; sourceTree = "<group>"; };
+		9AD7A221251E80B700C99849 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		9AD7A231251E80E100C99849 /* updater.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = updater.sh; sourceTree = "<group>"; };
+		9AD7A235251E815E00C99849 /* helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = helpers.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,10 +95,18 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9AD7A225251E80B700C99849 /* Updater.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		9A7921C3248D52E300788F2B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9AD7A21B251E80B700C99849 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -69,6 +121,7 @@
 			children = (
 				9A7921A9248D199400788F2B /* Custer */,
 				9A7921C7248D52E300788F2B /* LaunchAtLogin */,
+				9AD7A21F251E80B700C99849 /* Updater */,
 				9A7921A8248D199400788F2B /* Products */,
 			);
 			sourceTree = "<group>";
@@ -78,6 +131,7 @@
 			children = (
 				9A7921A7248D199400788F2B /* Custer.app */,
 				9A7921C6248D52E300788F2B /* LaunchAtLogin.app */,
+				9AD7A21E251E80B700C99849 /* Updater.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -115,7 +169,30 @@
 			path = LaunchAtLogin;
 			sourceTree = "<group>";
 		};
+		9AD7A21F251E80B700C99849 /* Updater */ = {
+			isa = PBXGroup;
+			children = (
+				9AD7A1C6251E780000C99849 /* main.swift */,
+				9AD7A235251E815E00C99849 /* helpers.swift */,
+				9AD7A231251E80E100C99849 /* updater.sh */,
+				9AD7A220251E80B700C99849 /* Updater.h */,
+				9AD7A221251E80B700C99849 /* Info.plist */,
+			);
+			path = Updater;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		9AD7A219251E80B700C99849 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9AD7A222251E80B700C99849 /* Updater.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
 		9A7921A6248D199400788F2B /* Custer */ = {
@@ -126,10 +203,13 @@
 				9A7921A4248D199400788F2B /* Frameworks */,
 				9A7921A5248D199400788F2B /* Resources */,
 				9A7921D6248D543000788F2B /* CopyFiles */,
+				9AD7A213251E809100C99849 /* Embed Frameworks */,
+				9AD7A23D251E851000C99849 /* CopyFiles */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				9AD7A224251E80B700C99849 /* PBXTargetDependency */,
 			);
 			name = Custer;
 			productName = Custer;
@@ -153,6 +233,24 @@
 			productReference = 9A7921C6248D52E300788F2B /* LaunchAtLogin.app */;
 			productType = "com.apple.product-type.application";
 		};
+		9AD7A21D251E80B700C99849 /* Updater */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9AD7A227251E80B700C99849 /* Build configuration list for PBXNativeTarget "Updater" */;
+			buildPhases = (
+				9AD7A219251E80B700C99849 /* Headers */,
+				9AD7A21A251E80B700C99849 /* Sources */,
+				9AD7A21B251E80B700C99849 /* Frameworks */,
+				9AD7A21C251E80B700C99849 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Updater;
+			productName = Updater;
+			productReference = 9AD7A21E251E80B700C99849 /* Updater.framework */;
+			productType = "com.apple.product-type.framework";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -160,7 +258,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1150;
-				LastUpgradeCheck = 1150;
+				LastUpgradeCheck = 1200;
 				ORGANIZATIONNAME = "Serhiy Mytrovtsiy";
 				TargetAttributes = {
 					9A7921A6248D199400788F2B = {
@@ -169,6 +267,9 @@
 					9A7921C5248D52E300788F2B = {
 						CreatedOnToolsVersion = 11.5;
 						LastSwiftMigration = 1150;
+					};
+					9AD7A21D251E80B700C99849 = {
+						CreatedOnToolsVersion = 12.0;
 					};
 				};
 			};
@@ -187,6 +288,7 @@
 			targets = (
 				9A7921A6248D199400788F2B /* Custer */,
 				9A7921C5248D52E300788F2B /* LaunchAtLogin */,
+				9AD7A21D251E80B700C99849 /* Updater */,
 			);
 		};
 /* End PBXProject section */
@@ -205,6 +307,14 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9AD7A21C251E80B700C99849 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9AD7A232251E80E100C99849 /* updater.sh in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -230,7 +340,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		9AD7A21A251E80B700C99849 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9AD7A22C251E80BF00C99849 /* main.swift in Sources */,
+				9AD7A236251E815E00C99849 /* helpers.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		9AD7A224251E80B700C99849 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9AD7A21D251E80B700C99849 /* Updater */;
+			targetProxy = 9AD7A223251E80B700C99849 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		9A7921B3248D199400788F2B /* Debug */ = {
@@ -259,6 +386,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -319,6 +447,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -349,6 +478,7 @@
 		9A7921B6248D199400788F2B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "Custer/Supporting Files/Custer.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
@@ -362,6 +492,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = eu.exelban.custer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -371,6 +502,7 @@
 		9A7921B7248D199400788F2B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "Custer/Supporting Files/Custer.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
@@ -384,6 +516,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = eu.exelban.custer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -396,6 +529,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = LaunchAtLogin/LaunchAtLogin.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = RP2S87B72W;
@@ -420,6 +554,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = LaunchAtLogin/LaunchAtLogin.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = RP2S87B72W;
@@ -434,6 +569,64 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		9AD7A228251E80B700C99849 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = RP2S87B72W;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = Updater/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.exelban.Updater;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		9AD7A229251E80B700C99849 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = RP2S87B72W;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = Updater/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.exelban.Updater;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
 			};
 			name = Release;
 		};
@@ -463,6 +656,15 @@
 			buildConfigurations = (
 				9A7921D2248D52E500788F2B /* Debug */,
 				9A7921D3248D52E500788F2B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9AD7A227251E80B700C99849 /* Build configuration list for PBXNativeTarget "Updater" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9AD7A228251E80B700C99849 /* Debug */,
+				9AD7A229251E80B700C99849 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
