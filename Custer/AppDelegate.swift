@@ -18,7 +18,7 @@ var store: Store = Store()
 let updater = Updater(user: "exelban", repo: "custer")
 var uri: String {
     get {
-        return store.string(key: "url", defaultValue: "https://n-6-12.dcs.redcdn.pl/sc/o2/Eurozet/live/audio.livx")
+        return store.string(key: "url", defaultValue: "")
     }
     set {
         store.set(key: "url", value: newValue)
@@ -31,15 +31,21 @@ class AppDelegate: NSObject, NSApplicationDelegate, playerDelegate {
     
     private let menuBarItem = NSStatusBar.system.statusItem(withLength: 28)
     private let autostart: Bool = store.bool(key: "autoplay", defaultValue: false)
-    private let menu: NSMenu = Menu()
+    private let menu: Menu = Menu()
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         self.parseArguments()
+        
+        if uri == "" {
+            os_log(.debug, log: log, "Stream url is not defined")
+            self.menu.showAddressView()
+        }
         
         self.menuBarItem.autosaveName = "custer"
         
         self.menuBarItem.button?.sendAction(on: [.leftMouseDown, .rightMouseDown])
         self.menuBarItem.button?.action = #selector(click(_:))
+        self.menuBarItem.button?.image = NSImage(named: NSImage.Name("error"))
         
         Player.shared.delegate = self
         Player.shared.setURL(uri)
@@ -69,6 +75,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, playerDelegate {
             self.menuBarItem.button?.performClick(nil)
             self.menuBarItem.menu = nil
             return
+        }
+        
+        if uri == "" {
+            self.menu.showAddressView()
         }
         
         if Player.shared.isError() {
@@ -110,7 +120,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, playerDelegate {
             }
         case .paused:
             self.menuBarItem.button?.image = NSImage(named: NSImage.Name("play"))
-        case .error:
+        case .error, .undefined:
             self.menuBarItem.button?.image = NSImage(named: NSImage.Name("error"))
         default:
             break

@@ -188,6 +188,11 @@ internal class Player: NSObject {
     }
     
     public func setURL(_ uri: String) {
+        if uri == "" {
+            os_log(.debug, log: log, "try to set empty url")
+            return
+        }
+        
         self.uri = uri
         self.reset()
         

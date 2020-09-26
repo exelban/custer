@@ -74,12 +74,11 @@ internal class Menu: NSMenu {
         fatalError("init(coder:) has not been implemented")
     }
     
-    @objc private func showAddressView() {
+    @objc public func showAddressView() {
         NSApplication.shared.activate(ignoringOtherApps: true)
         let alert: NSAlert = NSAlert()
         
         alert.addButton(withTitle: "OK")
-//        alert.addButton(withTitle: "Check")
         alert.addButton(withTitle: "Cancel")
         alert.alertStyle = .informational
         alert.messageText = "Stream URL"
@@ -94,8 +93,6 @@ internal class Menu: NSMenu {
         switch alert.runModal() {
         case .OK, .alertFirstButtonReturn:
             uri = input.stringValue
-        case .alertSecondButtonReturn:
-            print("check url")
         case .cancel, .alertThirdButtonReturn: break
         default: break
         }
