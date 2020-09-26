@@ -28,13 +28,14 @@ var uri: String {
 
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate, playerDelegate {
-    
     private let menuBarItem = NSStatusBar.system.statusItem(withLength: 28)
     private let autostart: Bool = store.bool(key: "autoplay", defaultValue: false)
     private let menu: Menu = Menu()
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        #if !ADHOC
         self.parseArguments()
+        #endif
         
         if uri == "" {
             os_log(.debug, log: log, "Stream url is not defined")
@@ -51,8 +52,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, playerDelegate {
         Player.shared.setURL(uri)
         
         if !store.exist(key: "runAtLoginInitialized") {
-            store.set(key: "runAtLoginInitialized", value: true)
-            LaunchAtLogin.isEnabled = true
+            var defaultValue = false
+            #if !ADHOC
+            defaultValue = true
+            #endif
+            store.set(key: "runAtLoginInitialized", value: defaultValue)
+            LaunchAtLogin.isEnabled = defaultValue
         }
         
         if store.exist(key: "icon") {
@@ -60,7 +65,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, playerDelegate {
             NSApp.setActivationPolicy(dockIconStatus)
         }
         
+        #if !ADHOC
         self.checkForNewVersion()
+        #endif
     }
     
     func applicationWillTerminate(_ aNotification: Notification) {}
