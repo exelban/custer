@@ -41,7 +41,7 @@ internal class Menu: NSMenu {
         streamAddress.target = self
         self.addItem(streamAddress)
         
-        let clearCache = NSMenuItem(title: "Clear cache", action: #selector(self.clearCache), keyEquivalent: "")
+        let clearCache = NSMenuItem(title: "Clear cache", action: #selector(self.clearCache), keyEquivalent: "r")
         clearCache.target = self
         self.addItem(clearCache)
         
@@ -67,7 +67,7 @@ internal class Menu: NSMenu {
         self.addItem(iconInDock)
         
         self.addItem(NSMenuItem.separator())
-        self.addItem(NSMenuItem(title: "Quit Custer", action: #selector(NSApplication.terminate(_:)), keyEquivalent: ""))
+        self.addItem(NSMenuItem(title: "Quit Custer", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
     }
     
     required init(coder: NSCoder) {

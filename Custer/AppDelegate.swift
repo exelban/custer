@@ -33,9 +33,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, playerDelegate {
     private let menu: Menu = Menu()
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        #if !ADHOC
         self.parseArguments()
-        #endif
         
         if uri == "" {
             os_log(.debug, log: log, "Stream url is not defined")
@@ -52,12 +50,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, playerDelegate {
         Player.shared.setURL(uri)
         
         if !store.exist(key: "runAtLoginInitialized") {
-            var defaultValue = false
-            #if !ADHOC
-            defaultValue = true
-            #endif
-            store.set(key: "runAtLoginInitialized", value: defaultValue)
-            LaunchAtLogin.isEnabled = defaultValue
+            store.set(key: "runAtLoginInitialized", value: true)
+            LaunchAtLogin.isEnabled = true
         }
         
         if store.exist(key: "icon") {
@@ -65,9 +59,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, playerDelegate {
             NSApp.setActivationPolicy(dockIconStatus)
         }
         
-        #if !ADHOC
         self.checkForNewVersion()
-        #endif
     }
     
     func applicationWillTerminate(_ aNotification: Notification) {}
