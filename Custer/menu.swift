@@ -11,7 +11,55 @@
 
 import Cocoa
 
-internal class Menu: NSMenu {
+class MenuBar {
+    public let menu: Menu = Menu()
+    
+    private var item: NSStatusItem
+    
+    init() {
+        self.item = NSStatusBar.system.statusItem(withLength: NSApplication.shared.mainMenu?.menuBarHeight ?? 22)
+        self.item.autosaveName = Bundle.main.bundleIdentifier
+        
+        self.item.button?.sendAction(on: [.leftMouseDown, .rightMouseDown])
+        self.item.button?.action = #selector(self.click)
+        self.item.button?.target = self
+        self.item.button?.image = NSImage(named: NSImage.Name("error"))
+    }
+    
+    public func setImage(_ image: String) {
+        self.item.button?.image = NSImage(named: NSImage.Name(image))
+    }
+    
+    @objc private func click(_ sender: NSStatusBarButton) {
+        guard let event: NSEvent = NSApp.currentEvent else {
+            return
+        }
+        
+        if (event.type == NSEvent.EventType.rightMouseDown) {
+            self.item.menu = self.menu
+            self.item.button?.performClick(nil)
+            self.item.menu = nil
+            return
+        }
+        
+        if uri == "" {
+            self.menu.showAddressView()
+        }
+        
+        if Player.shared.isError() {
+            return
+        }
+        
+        if Player.shared.isPlaying() {
+            Player.shared.pause()
+            return
+        }
+        
+        Player.shared.play()
+    }
+}
+
+class Menu: NSMenu {
     init() {
         super.init(title: "")
         
@@ -52,7 +100,7 @@ internal class Menu: NSMenu {
         self.addItem(NSMenuItem.separator())
         
         let autoplay = NSMenuItem(title: "Autoplay", action: #selector(self.toggleAutoplay), keyEquivalent: "")
-        autoplay.state = store.bool(key: "autoplay", defaultValue: false) ? NSControl.StateValue.on : NSControl.StateValue.off
+        autoplay.state = Store.shared.bool(key: "autoplay", defaultValue: false) ? NSControl.StateValue.on : NSControl.StateValue.off
         autoplay.target = self
         self.addItem(autoplay)
         
@@ -62,7 +110,7 @@ internal class Menu: NSMenu {
         self.addItem(launchAtLogin)
         
         let iconInDock = NSMenuItem(title: "Show icon in dock", action: #selector(self.toggleIcon), keyEquivalent: "")
-        iconInDock.state = store.bool(key: "icon", defaultValue: false) ? NSControl.StateValue.on : NSControl.StateValue.off
+        iconInDock.state = Store.shared.bool(key: "icon", defaultValue: false) ? NSControl.StateValue.on : NSControl.StateValue.off
         iconInDock.target = self
         self.addItem(iconInDock)
         
@@ -100,7 +148,7 @@ internal class Menu: NSMenu {
     
     @objc private func volumeChange(_ sender: NSSlider) {
         Player.shared.setVolume(Float(sender.doubleValue))
-        store.set(key: "volume", value: Float(sender.doubleValue))
+        Store.shared.set(key: "volume", value: Float(sender.doubleValue))
     }
     
     @objc private func clearCache(_ sender: NSMenuItem) {
@@ -111,14 +159,14 @@ internal class Menu: NSMenu {
         let state = sender.state != NSControl.StateValue.on
         sender.state = sender.state == NSControl.StateValue.on ? NSControl.StateValue.off : NSControl.StateValue.on
         
-        store.set(key: "autoplay", value: state)
+        Store.shared.set(key: "autoplay", value: state)
     }
     
     @objc private func toggleIcon(_ sender: NSMenuItem) {
         let state = sender.state != NSControl.StateValue.on
         sender.state = sender.state == NSControl.StateValue.on ? NSControl.StateValue.off : NSControl.StateValue.on
         
-        store.set(key: "icon", value: state)
+        Store.shared.set(key: "icon", value: state)
         
         let dockIconStatus = state ? NSApplication.ActivationPolicy.regular : NSApplication.ActivationPolicy.accessory
         NSApp.setActivationPolicy(dockIconStatus)
@@ -132,8 +180,8 @@ internal class Menu: NSMenu {
         sender.state = sender.state == NSControl.StateValue.on ? NSControl.StateValue.off : NSControl.StateValue.on
         
         LaunchAtLogin.isEnabled = state
-        if !store.exist(key: "runAtLoginInitialized") {
-            store.set(key: "runAtLoginInitialized", value: true)
+        if !Store.shared.exist(key: "runAtLoginInitialized") {
+            Store.shared.set(key: "runAtLoginInitialized", value: true)
         }
     }
 }

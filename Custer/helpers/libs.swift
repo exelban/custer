@@ -32,6 +32,8 @@ public struct LaunchAtLogin {
 }
 
 public class Store {
+    static public let shared: Store = Store()
+    
     private let defaults = UserDefaults.standard
     
     public init() {}

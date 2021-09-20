@@ -49,7 +49,7 @@ protocol playerDelegate {
 internal class Player: NSObject {
     public static let shared = Player()
     public var delegate: playerDelegate? = nil
-    public var volume: Float = store.float(key: "volume", defaultValue: 0.8)
+    public var volume: Float = Store.shared.float(key: "volume", defaultValue: 0.8)
     public var buffer: (_ total: Double, _ current: Double) -> Void = {_,_ in }
     
     private var player = AVPlayer()
@@ -113,7 +113,7 @@ internal class Player: NSObject {
         self.state = .error
     }
     
-    private func reset(play: Bool = false) {
+    public func reset(play: Bool = false) {
         guard self.uri != nil else {
             self.error = player_error.emptyURL.rawValue
             self.state = .error

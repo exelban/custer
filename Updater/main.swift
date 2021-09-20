@@ -133,7 +133,10 @@ public class Updater {
         
         print("Script is copied to $TMPDIR/updater.sh")
         
-        let pwd = Bundle.main.bundleURL.absoluteString.replacingOccurrences(of: "file://", with: "").replacingOccurrences(of: "Custer.app/", with: "")
+        let pwd = Bundle.main.bundleURL.absoluteString
+            .replacingOccurrences(of: "file://", with: "")
+            .replacingOccurrences(of: "Custer.app", with: "")
+            .replacingOccurrences(of: "//", with: "/")
         asyncShell("sh $TMPDIR/updater.sh --app \(pwd) --dmg \(path) >/dev/null &") // run updater script in in background
         
         print("Run updater.sh with app: \(pwd) and dmg: \(path)")

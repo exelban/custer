@@ -11,10 +11,11 @@
 		9A7921AD248D199400788F2B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9A7921AC248D199400788F2B /* Assets.xcassets */; };
 		9A7921BA248D1BE800788F2B /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9A7921B9248D1BE800788F2B /* MainMenu.xib */; };
 		9A7921BD248D247E00788F2B /* player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A7921BC248D247E00788F2B /* player.swift */; };
-		9A7921BF248D486E00788F2B /* menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A7921BE248D486E00788F2B /* menu.swift */; };
 		9A7921C1248D518400788F2B /* libs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A7921C0248D518400788F2B /* libs.swift */; };
 		9A7921D5248D52FB00788F2B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A7921D4248D52FB00788F2B /* main.swift */; };
 		9A7921D7248D543F00788F2B /* LaunchAtLogin.app in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9A7921C6248D52E300788F2B /* LaunchAtLogin.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		9AC88F7626F7C67A00F8AE3C /* Reachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC88F7526F7C67A00F8AE3C /* Reachability.swift */; };
+		9AC88F7C26F7D05900F8AE3C /* menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC88F7B26F7D05800F8AE3C /* menu.swift */; };
 		9AD7A222251E80B700C99849 /* Updater.h in Headers */ = {isa = PBXBuildFile; fileRef = 9AD7A220251E80B700C99849 /* Updater.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		9AD7A225251E80B700C99849 /* Updater.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9AD7A21E251E80B700C99849 /* Updater.framework */; };
 		9AD7A226251E80B700C99849 /* Updater.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9AD7A21E251E80B700C99849 /* Updater.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -76,12 +77,13 @@
 		9A7921B8248D19C200788F2B /* Custer.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Custer.entitlements; sourceTree = "<group>"; };
 		9A7921B9248D1BE800788F2B /* MainMenu.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MainMenu.xib; sourceTree = "<group>"; };
 		9A7921BC248D247E00788F2B /* player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = player.swift; sourceTree = "<group>"; };
-		9A7921BE248D486E00788F2B /* menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = menu.swift; sourceTree = "<group>"; };
 		9A7921C0248D518400788F2B /* libs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = libs.swift; sourceTree = "<group>"; };
 		9A7921C6248D52E300788F2B /* LaunchAtLogin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LaunchAtLogin.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9A7921CF248D52E500788F2B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9A7921D0248D52E500788F2B /* LaunchAtLogin.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LaunchAtLogin.entitlements; sourceTree = "<group>"; };
 		9A7921D4248D52FB00788F2B /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		9AC88F7526F7C67A00F8AE3C /* Reachability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reachability.swift; sourceTree = "<group>"; };
+		9AC88F7B26F7D05800F8AE3C /* menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = menu.swift; sourceTree = "<group>"; };
 		9AD7A1C6251E780000C99849 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		9AD7A21E251E80B700C99849 /* Updater.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Updater.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9AD7A220251E80B700C99849 /* Updater.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Updater.h; sourceTree = "<group>"; };
@@ -140,10 +142,10 @@
 			isa = PBXGroup;
 			children = (
 				9A7921BB248D1C0200788F2B /* Supporting Files */,
+				9AC88F8726F7D93600F8AE3C /* helpers */,
 				9A7921AA248D199400788F2B /* AppDelegate.swift */,
+				9AC88F7B26F7D05800F8AE3C /* menu.swift */,
 				9A7921BC248D247E00788F2B /* player.swift */,
-				9A7921BE248D486E00788F2B /* menu.swift */,
-				9A7921C0248D518400788F2B /* libs.swift */,
 			);
 			path = Custer;
 			sourceTree = "<group>";
@@ -167,6 +169,15 @@
 				9A7921D0248D52E500788F2B /* LaunchAtLogin.entitlements */,
 			);
 			path = LaunchAtLogin;
+			sourceTree = "<group>";
+		};
+		9AC88F8726F7D93600F8AE3C /* helpers */ = {
+			isa = PBXGroup;
+			children = (
+				9AC88F7526F7C67A00F8AE3C /* Reachability.swift */,
+				9A7921C0248D518400788F2B /* libs.swift */,
+			);
+			path = helpers;
 			sourceTree = "<group>";
 		};
 		9AD7A21F251E80B700C99849 /* Updater */ = {
@@ -212,6 +223,8 @@
 				9AD7A224251E80B700C99849 /* PBXTargetDependency */,
 			);
 			name = Custer;
+			packageProductDependencies = (
+			);
 			productName = Custer;
 			productReference = 9A7921A7248D199400788F2B /* Custer.app */;
 			productType = "com.apple.product-type.application";
@@ -282,6 +295,8 @@
 				Base,
 			);
 			mainGroup = 9A79219E248D199400788F2B;
+			packageReferences = (
+			);
 			productRefGroup = 9A7921A8248D199400788F2B /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -327,7 +342,8 @@
 			files = (
 				9A7921BD248D247E00788F2B /* player.swift in Sources */,
 				9A7921AB248D199400788F2B /* AppDelegate.swift in Sources */,
-				9A7921BF248D486E00788F2B /* menu.swift in Sources */,
+				9AC88F7626F7C67A00F8AE3C /* Reachability.swift in Sources */,
+				9AC88F7C26F7D05900F8AE3C /* menu.swift in Sources */,
 				9A7921C1248D518400788F2B /* libs.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -493,7 +509,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = eu.exelban.custer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -518,7 +534,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = eu.exelban.custer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;

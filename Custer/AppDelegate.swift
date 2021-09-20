@@ -14,120 +14,97 @@ import os.log
 import Updater
 
 let log = OSLog(subsystem: Bundle.main.bundleIdentifier!, category: "custer")
-var store: Store = Store()
-let updater = Updater(user: "exelban", repo: "custer")
 var uri: String {
     get {
-        return store.string(key: "url", defaultValue: "")
+        return Store.shared.string(key: "url", defaultValue: "")
     }
     set {
-        store.set(key: "url", value: newValue)
+        Store.shared.set(key: "url", value: newValue)
         Player.shared.setURL(newValue)
     }
 }
 
 @NSApplicationMain
-class AppDelegate: NSObject, NSApplicationDelegate, playerDelegate {
-    private let menuBarItem = NSStatusBar.system.statusItem(withLength: 28)
-    private let autostart: Bool = store.bool(key: "autoplay", defaultValue: false)
-    private let menu: Menu = Menu()
+class AppDelegate: NSObject, NSApplicationDelegate {
+    private let menuBar: MenuBar = MenuBar()
+    private let updater = Updater(user: "exelban", repo: "custer")
+    private let reachability: Reachability = try! Reachability()
+    
+    private let autostart: Bool = Store.shared.bool(key: "autoplay", defaultValue: false)
+    private var lastState: Bool = false
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         self.parseArguments()
         
         if uri == "" {
             os_log(.debug, log: log, "Stream url is not defined")
-            self.menu.showAddressView()
+            self.menuBar.menu.showAddressView()
         }
-        
-        self.menuBarItem.autosaveName = "custer"
-        
-        self.menuBarItem.button?.sendAction(on: [.leftMouseDown, .rightMouseDown])
-        self.menuBarItem.button?.action = #selector(click(_:))
-        self.menuBarItem.button?.image = NSImage(named: NSImage.Name("error"))
         
         Player.shared.delegate = self
         Player.shared.setURL(uri)
         
-        if !store.exist(key: "runAtLoginInitialized") {
-            store.set(key: "runAtLoginInitialized", value: true)
-            LaunchAtLogin.isEnabled = true
-        }
-        
-        if store.exist(key: "icon") {
-            let dockIconStatus = store.bool(key: "icon", defaultValue: false) ? NSApplication.ActivationPolicy.regular : NSApplication.ActivationPolicy.accessory
-            NSApp.setActivationPolicy(dockIconStatus)
-        }
-        
+        self.defaultValues()
         self.checkForNewVersion()
+        self.networkReachability()
     }
-    
-    func applicationWillTerminate(_ aNotification: Notification) {}
-    
-    @objc func click(_ sender: NSStatusBarButton) {
-        guard let event: NSEvent = NSApp.currentEvent else {
+}
+
+// MARK: - playerDelegate
+
+extension AppDelegate: playerDelegate {
+    func onError(error: String) {
+        if reachability.connection == .unavailable {
             return
         }
         
-        if (event.type == NSEvent.EventType.rightMouseDown) {
-            self.menuBarItem.menu = self.menu
-            self.menuBarItem.button?.performClick(nil)
-            self.menuBarItem.menu = nil
-            return
-        }
-        
-        if uri == "" {
-            self.menu.showAddressView()
-        }
-        
-        if Player.shared.isError() {
-            return
-        }
-        
-        if Player.shared.isPlaying() {
-            Player.shared.pause()
-            return
-        }
-        
-        Player.shared.play()
-    }
-    
-    internal func onError(error: String) {
         let alert = NSAlert()
         alert.messageText = "Error to start player"
         alert.informativeText = error
         alert.alertStyle = .warning
         alert.addButton(withTitle: "OK")
         
-        if let window = NSApplication.shared.windows.first{
+        if let window = NSApplication.shared.windows.first {
             alert.beginSheetModal(for: window, completionHandler: nil)
         }
         
         os_log(.error, log: log, "error: %s", error)
     }
     
-    internal func stateChange(state: player_state) {
+    func stateChange(state: player_state) {
         os_log(.debug, log: log, "new state: %s", state.description)
         
         switch state {
-        case .playing:
-            self.menuBarItem.button?.image = NSImage(named: NSImage.Name("pause"))
+        case .playing: self.menuBar.setImage("pause")
         case .ready:
-        self.menuBarItem.button?.image = NSImage(named: NSImage.Name("play"))
+            self.menuBar.setImage("play")
             if self.autostart {
                 Player.shared.play()
             }
-        case .paused:
-            self.menuBarItem.button?.image = NSImage(named: NSImage.Name("play"))
-        case .error, .undefined:
-            self.menuBarItem.button?.image = NSImage(named: NSImage.Name("error"))
-        default:
-            break
+        case .paused: self.menuBar.setImage("play")
+        case .error, .undefined: self.menuBar.setImage("error")
+        default: break
+        }
+    }
+}
+
+// MARK: - helpers
+
+extension AppDelegate {
+    private func defaultValues() {
+        if !Store.shared.exist(key: "runAtLoginInitialized") {
+            Store.shared.set(key: "runAtLoginInitialized", value: true)
+            LaunchAtLogin.isEnabled = true
+        }
+        
+        if Store.shared.exist(key: "icon") {
+            let dockIconStatus = Store.shared.bool(key: "icon", defaultValue: false) ? NSApplication.ActivationPolicy.regular : NSApplication.ActivationPolicy.accessory
+            NSApp.setActivationPolicy(dockIconStatus)
         }
     }
     
-    internal func checkForNewVersion() {
-        updater.check() { result, error in
+    private func checkForNewVersion() {
+        self.updater.check() { result, error in
             if error != nil {
                 os_log(.error, log: log, "error updater.check(): %s", "\(error!.localizedDescription)")
                 return
@@ -151,8 +128,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, playerDelegate {
                     
                     if alert.runModal() == .alertFirstButtonReturn {
                         if let url = URL(string: version.url) {
-                            updater.download(url, doneHandler: { path in
-                                updater.install(path: path)
+                            self.updater.download(url, doneHandler: { path in
+                                self.updater.install(path: path)
                             })
                         }
                     }
@@ -161,7 +138,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, playerDelegate {
         }
     }
     
-    internal func parseArguments() {
+    private func parseArguments() {
         let args = CommandLine.arguments
         
         if let mountIndex = args.firstIndex(of: "--mount-path") {
@@ -182,5 +159,24 @@ class AppDelegate: NSObject, NSApplicationDelegate, playerDelegate {
             }
         }
     }
-}
+    
+    private func networkReachability() {
+        self.reachability.whenReachable = { reachability in
+            if self.lastState {
+                Player.shared.clearBuffer()
+            } else {
+                Player.shared.reset(play: false)
+            }
+        }
+        self.reachability.whenUnreachable = { _ in
+            self.lastState = Player.shared.isPlaying()
+            Player.shared.pause()
+        }
 
+        do {
+            try self.reachability.startNotifier()
+        } catch {
+            print("Unable to start notifier")
+        }
+    }
+}
