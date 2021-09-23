@@ -32,6 +32,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     private let autostart: Bool = Store.shared.bool(key: "autoplay", defaultValue: false)
     private var lastState: Bool = false
+    private var initialized: Bool = false
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         self.parseArguments()
@@ -78,8 +79,11 @@ extension AppDelegate: playerDelegate {
         case .playing: self.menuBar.setImage("pause")
         case .ready:
             self.menuBar.setImage("play")
-            if self.autostart {
-                Player.shared.play()
+            if self.autostart && !self.initialized {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    Player.shared.play()
+                }
+                self.initialized = true
             }
         case .paused: self.menuBar.setImage("play")
         case .error, .undefined: self.menuBar.setImage("error")
@@ -172,7 +176,7 @@ extension AppDelegate {
             self.lastState = Player.shared.isPlaying()
             Player.shared.pause()
         }
-
+        
         do {
             try self.reachability.startNotifier()
         } catch {

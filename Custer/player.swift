@@ -134,24 +134,24 @@ internal class Player: NSObject {
             var error: NSError? = nil
             
             DispatchQueue.main.async {
-                let status: AVKeyValueStatus = asset.statusOfValue(forKey: statusKey, error: &error)
-                
-                if status == AVKeyValueStatus.loaded {
-                    self.player = AVPlayer(playerItem: AVPlayerItem(asset: asset))
-                    self.state = .ready
-                    if !self.volumeSet {
-                        self.player.volume = self.volume
-                        self.volumeSet = true
-                    }
-                    if play {
-                        self.play()
-                    }
+                if asset.statusOfValue(forKey: statusKey, error: &error) != .loaded {
+                    self.error = error!.localizedDescription
+                    self.state = .error
+                    os_log(.error, log: log, "load asset: %s", error!.localizedDescription)
                     return
                 }
                 
-                self.error = error!.localizedDescription
-                self.state = .error
-                os_log(.error, log: log, "load asset: %s", error!.localizedDescription)
+                self.player = AVPlayer(playerItem: AVPlayerItem(asset: asset))
+                self.state = .ready
+                
+                if !self.volumeSet {
+                    self.player.volume = self.volume
+                    self.volumeSet = true
+                }
+                
+                if play {
+                    self.play()
+                }
             }
         })
     }
