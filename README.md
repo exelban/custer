@@ -17,8 +17,9 @@ Custer is an application that allows you to listen to your favorite internet rad
 
  - Simple and lightweight
  - Control stream from the menubar
- - Automatic play when start
+ - Autoplay when launch
  - Volume control
+ - Control with media keys
 
 ## License
 [MIT License](https://github.com/exelban/custer/blob/master/LICENSE)
