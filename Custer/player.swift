@@ -12,6 +12,7 @@
 import Cocoa
 import os.log
 import AVFoundation
+import MediaPlayer
 
 internal enum player_state: Int {
     case undefined
@@ -48,6 +49,7 @@ protocol playerDelegate {
 
 internal class Player: NSObject {
     public static let shared = Player()
+    
     public var delegate: playerDelegate? = nil
     public var volume: Float = Store.shared.float(key: "volume", defaultValue: 0.8)
     public var buffer: (_ total: Double, _ current: Double) -> Void = {_,_ in }
@@ -59,6 +61,9 @@ internal class Player: NSObject {
     private var uri: String? = nil
     private var volumeSet: Bool = false
     private var pauseTimestamp: Date? = nil
+    
+    private let nowPlayingInfoCenter: MPNowPlayingInfoCenter = .default()
+    private let remoteCommandCenter: MPRemoteCommandCenter = .shared()
     
     private var error: String? = nil {
         didSet {
@@ -90,6 +95,11 @@ internal class Player: NSObject {
             queue: nil,
             using: streamInterrupted
         )
+        
+        self.remoteCommandCenter.playCommand.addTarget(self, action: #selector(self.playCommandEvent))
+        self.remoteCommandCenter.pauseCommand.addTarget(self, action: #selector(self.pauseCommandEvent))
+        self.remoteCommandCenter.stopCommand.addTarget(self, action: #selector(self.stopCommandEvent))
+        self.remoteCommandCenter.togglePlayPauseCommand.addTarget(self, action: #selector(self.playPauseCommandEvent))
         
         os_log(.debug, log: log, "Initialized player")
     }
@@ -174,6 +184,8 @@ internal class Player: NSObject {
         self.bufferObserver = self.player.addPeriodicTimeObserver(forInterval: CMTimeMake(value: 1, timescale: 10), queue: DispatchQueue.main) { [weak self] time in
             self?.buffer(self?.player.currentItem?.totalBuffer() ?? -1, self?.player.currentItem?.currentBuffer() ?? -1)
         }
+        
+        self.setMetadata()
     }
     
     public func pause() {
@@ -200,7 +212,7 @@ internal class Player: NSObject {
     }
     
     public func isPlaying() -> Bool {
-        return self.state == .playing
+        return self.state == .playing && self.player.rate == 1
     }
     
     public func isError() -> Bool {
@@ -213,5 +225,46 @@ internal class Player: NSObject {
     
     public func clearBuffer() {
         self.reset(play: true)
+    }
+    
+    private func setMetadata() {
+        var info = self.nowPlayingInfoCenter.nowPlayingInfo ?? [String: Any]()
+        
+        info[MPMediaItemPropertyTitle] = "Custer - radio"
+        info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = player.currentTime().seconds
+        info[MPMediaItemPropertyPlaybackDuration] = 9999999
+        
+        DispatchQueue.main.async { [unowned self] in
+          self.nowPlayingInfoCenter.nowPlayingInfo = info
+        }
+        
+        self.nowPlayingInfoCenter.nowPlayingInfo = info
+        self.nowPlayingInfoCenter.playbackState = .playing
+    }
+    
+    // MARK:- command handlers
+    
+    @objc func playCommandEvent(_ event: MPRemoteCommandEvent) -> MPRemoteCommandHandlerStatus {
+        self.play()
+        return .success
+    }
+    
+    @objc func pauseCommandEvent(_ event: MPRemoteCommandEvent) -> MPRemoteCommandHandlerStatus {
+        self.pause()
+        return .success
+    }
+    
+    @objc func stopCommandEvent(_ event: MPRemoteCommandEvent) -> MPRemoteCommandHandlerStatus {
+        self.pause()
+        return .success
+    }
+    
+    @objc func playPauseCommandEvent(_ event: MPRemoteCommandEvent) -> MPRemoteCommandHandlerStatus {
+        if self.isPlaying() {
+            self.pause()
+        } else {
+            self.play()
+        }
+        return .success
     }
 }
