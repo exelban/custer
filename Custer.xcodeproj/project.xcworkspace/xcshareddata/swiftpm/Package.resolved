@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "Updater",
+        "repositoryURL": "https://github.com/exelban/updater",
+        "state": {
+          "branch": "dev",
+          "revision": "795c12a898714ec6c3431f5e5471acf1731eb28c",
+          "version": null
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -27,7 +27,7 @@ var uri: String {
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
     private let menuBar: MenuBar = MenuBar()
-    private let updater = Updater(user: "exelban", repo: "custer")
+    private let updater = Updater(name: "Custer", providers: [Updater.Github(user: "exelban", repo: "custer", asset: "Custer.dmg")])
     private let reachability: Reachability = try! Reachability()
     
     private let autostart: Bool = Store.shared.bool(key: "autoplay", defaultValue: false)
@@ -35,7 +35,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var initialized: Bool = false
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        self.parseArguments()
+        self.updater.cleanup()
         
         if uri == "" {
             os_log(.debug, log: log, "Stream url is not defined")
@@ -110,57 +110,38 @@ extension AppDelegate {
     private func checkForNewVersion() {
         self.updater.check() { result, error in
             if error != nil {
-                os_log(.error, log: log, "error updater.check(): %s", "\(error!.localizedDescription)")
+                os_log(.error, log: log, "error updater.check(): %s", "\(error!)")
                 return
             }
             
-            guard error == nil, let version: version_s = result else {
-                os_log(.error, log: log, "download error(): %s", "\(error!.localizedDescription)")
+            guard let external = result else {
+                os_log(.error, log: log, "no external release found")
+                return
+            }
+            let local = Updater.Tag("v\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as! String)")
+            
+            if local >= external.tag {
                 return
             }
             
             DispatchQueue.main.async(execute: {
-                if version.newest {
-                    os_log(.debug, log: log, "show update window because new version of app found: %s", "\(version.latest)")
-                    
-                    let alert = NSAlert()
-                    alert.messageText = "New version available"
-                    alert.informativeText = "Current version:   \(version.current)\nLatest version:     \(version.latest)"
-                    alert.alertStyle = .warning
-                    alert.addButton(withTitle: "Install")
-                    alert.addButton(withTitle: "Cancel")
-                    
-                    if alert.runModal() == .alertFirstButtonReturn {
-                        if let url = URL(string: version.url) {
-                            self.updater.download(url, doneHandler: { path in
-                                self.updater.install(path: path)
-                            })
-                        }
+                os_log(.debug, log: log, "show update window because new version of app found: %s", "\(external.tag.raw)")
+                
+                let alert = NSAlert()
+                alert.messageText = "New version available"
+                alert.informativeText = "Current version:   \(local.raw)\nLatest version:     \(external.tag.raw)"
+                alert.alertStyle = .warning
+                alert.addButton(withTitle: "Install")
+                alert.addButton(withTitle: "Cancel")
+                
+                if alert.runModal() == .alertFirstButtonReturn {
+                    if let url = URL(string: external.url) {
+                        self.updater.download(url, done: { path in
+                            self.updater.install(path: path)
+                        })
                     }
                 }
             })
-        }
-    }
-    
-    private func parseArguments() {
-        let args = CommandLine.arguments
-        
-        if let mountIndex = args.firstIndex(of: "--mount-path") {
-            if args.indices.contains(mountIndex+1) {
-                let mountPath = args[mountIndex+1]
-                asyncShell("/usr/bin/hdiutil detach \(mountPath)")
-                asyncShell("/bin/rm -rf \(mountPath)")
-                
-                os_log(.debug, log: log, "DMG was unmounted and mountPath deleted")
-            }
-        }
-        
-        if let dmgIndex = args.firstIndex(of: "--dmg-path") {
-            if args.indices.contains(dmgIndex+1) {
-                asyncShell("/bin/rm -rf \(args[dmgIndex+1])")
-                
-                os_log(.debug, log: log, "DMG was deleted")
-            }
         }
     }
     
