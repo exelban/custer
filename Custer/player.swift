@@ -51,7 +51,15 @@ internal class Player: NSObject {
     public static let shared = Player()
     
     public var delegate: playerDelegate? = nil
-    public var volume: Float = Store.shared.float(key: "volume", defaultValue: 0.8)
+    public var volume: Float {
+        get {
+            Store.shared.float(key: "volume", defaultValue: 0.8)
+        }
+        set {
+            self.player.volume = newValue
+            Store.shared.set(key: "volume", value: newValue)
+        }
+    }
     public var buffer: (_ total: Double, _ current: Double) -> Void = {_,_ in }
     
     private var player = AVPlayer()
@@ -59,7 +67,6 @@ internal class Player: NSObject {
     private var bufferObserver: Any!
     
     private var uri: String? = nil
-    private var volumeSet: Bool = false
     private var pauseTimestamp: Date? = nil
     
     private let nowPlayingInfoCenter: MPNowPlayingInfoCenter = .default()
@@ -153,11 +160,7 @@ internal class Player: NSObject {
                 
                 self.player = AVPlayer(playerItem: AVPlayerItem(asset: asset))
                 self.state = .ready
-                
-                if !self.volumeSet {
-                    self.player.volume = self.volume
-                    self.volumeSet = true
-                }
+                self.player.volume = self.volume
                 
                 if play {
                     self.play()
@@ -177,6 +180,7 @@ internal class Player: NSObject {
         } else {
             self.player.play()
         }
+        self.player.volume = self.volume
         
         self.state = .playing
         os_log(.debug, log: log, "player is playing")
@@ -217,10 +221,6 @@ internal class Player: NSObject {
     
     public func isError() -> Bool {
         return self.state == .error
-    }
-    
-    public func setVolume(_ volume: Float) {
-        self.player.volume = volume
     }
     
     public func clearBuffer() {

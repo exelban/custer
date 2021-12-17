@@ -18,7 +18,7 @@ public struct LaunchAtLogin {
     
     public static var isEnabled: Bool {
         get {
-            guard let jobs = (SMCopyAllJobDictionaries(kSMDomainUserLaunchd).takeRetainedValue() as? [[String: AnyObject]]) else {
+            guard let jobs = (LaunchAtLogin.self as DeprecationWarningWorkaround.Type).jobsDict else {
                 return false
             }
             
@@ -28,6 +28,18 @@ public struct LaunchAtLogin {
         set {
             SMLoginItemSetEnabled(id as CFString, newValue)
         }
+    }
+}
+
+private protocol DeprecationWarningWorkaround {
+    static var jobsDict: [[String: AnyObject]]? { get }
+}
+
+extension LaunchAtLogin: DeprecationWarningWorkaround {
+    @available(*, deprecated)
+    static var jobsDict: [[String: AnyObject]]? {
+        SMCopyAllJobDictionaries(kSMDomainUserLaunchd)?.takeRetainedValue() as? [[String: AnyObject]]
+        
     }
 }
 

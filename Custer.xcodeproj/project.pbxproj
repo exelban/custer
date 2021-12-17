@@ -531,7 +531,7 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/exelban/updater";
 			requirement = {
-				branch = dev;
+				branch = master;
 				kind = branch;
 			};
 		};

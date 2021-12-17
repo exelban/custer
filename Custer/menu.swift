@@ -147,8 +147,7 @@ class Menu: NSMenu {
     }
     
     @objc private func volumeChange(_ sender: NSSlider) {
-        Player.shared.setVolume(Float(sender.doubleValue))
-        Store.shared.set(key: "volume", value: Float(sender.doubleValue))
+        Player.shared.volume = Float(sender.doubleValue)
     }
     
     @objc private func clearCache(_ sender: NSMenuItem) {
