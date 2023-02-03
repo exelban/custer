@@ -248,11 +248,14 @@ internal class Player: NSObject {
     private func setMetadata(title: String?) {
         
         var info = self.nowPlayingInfoCenter.nowPlayingInfo ?? [String: Any]()
+
+        // some radios use UPPERCASE titles -> Do Not Let Them Scream At Us
+        let capitalizedTitle = title?.capitalized
         
-        info[MPMediaItemPropertyTitle] = title ?? "Custer Radio"
+        info[MPMediaItemPropertyTitle] = capitalizedTitle ?? "Custer Radio"
         info[MPMediaItemPropertyArtist] = ""
-        
-        if let t = title {
+
+        if let t = capitalizedTitle {
             if t.contains(" - ") {
                 let data = t.components(separatedBy: " - ")
                 info[MPMediaItemPropertyArtist] = data[0]
