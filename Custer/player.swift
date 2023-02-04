@@ -83,6 +83,7 @@ internal class Player: NSObject {
             }
         }
     }
+    
     private var state: player_state = .undefined {
         didSet {
             if let delegate = self.delegate {
@@ -158,7 +159,10 @@ internal class Player: NSObject {
                     return
                 }
                 
-                self.player = AVPlayer(playerItem: AVPlayerItem(asset: asset))
+                let playerItem = AVPlayerItem(asset: asset)
+                playerItem.addObserver(self, forKeyPath: "timedMetadata", options: .new, context: nil)
+                
+                self.player = AVPlayer(playerItem: playerItem)
                 self.state = .ready
                 self.player.volume = self.volume
                 
@@ -167,6 +171,17 @@ internal class Player: NSObject {
                 }
             }
         })
+    }
+    
+    // timedMetadata change handler, will update the stream metadata
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        guard keyPath == "timedMetadata" else { return }
+        guard let meta = self.player.currentItem?.timedMetadata else { return }
+        for metadata in meta {
+            if let title = metadata.value(forKey: "value") as? String {
+                setMetadata(title: title)
+            }
+        }
     }
     
     public func play() {
@@ -189,7 +204,7 @@ internal class Player: NSObject {
             self?.buffer(self?.player.currentItem?.totalBuffer() ?? -1, self?.player.currentItem?.currentBuffer() ?? -1)
         }
         
-        self.setMetadata()
+        self.nowPlayingInfoCenter.playbackState = .playing
     }
     
     public func pause() {
@@ -200,6 +215,9 @@ internal class Player: NSObject {
         self.player.pause()
         self.state = .paused
         self.pauseTimestamp = Date()
+        
+        self.nowPlayingInfoCenter.playbackState = .paused
+
         os_log(.debug, log: log, "player is paused")
     }
     
@@ -227,10 +245,24 @@ internal class Player: NSObject {
         self.reset(play: true)
     }
     
-    private func setMetadata() {
-        var info = self.nowPlayingInfoCenter.nowPlayingInfo ?? [String: Any]()
+    private func setMetadata(title: String?) {
         
-        info[MPMediaItemPropertyTitle] = "Custer - radio"
+        var info = self.nowPlayingInfoCenter.nowPlayingInfo ?? [String: Any]()
+
+        // some radios use UPPERCASE titles -> Do Not Let Them Scream At Us
+        let capitalizedTitle = title?.capitalized
+        
+        info[MPMediaItemPropertyTitle] = capitalizedTitle ?? "Custer Radio"
+        info[MPMediaItemPropertyArtist] = ""
+
+        if let t = capitalizedTitle {
+            if t.contains(" - ") {
+                let data = t.components(separatedBy: " - ")
+                info[MPMediaItemPropertyArtist] = data[0]
+                info[MPMediaItemPropertyTitle] = data[1]
+            }
+        }
+        
         info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = player.currentTime().seconds
         info[MPMediaItemPropertyPlaybackDuration] = 9999999
         
