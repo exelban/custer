@@ -34,6 +34,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var lastState: Bool = false
     private var initialized: Bool = false
     
+    private let nc = NSWorkspace.shared.notificationCenter
+    
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         self.updater.cleanup()
         
@@ -48,6 +50,31 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         self.defaultValues()
         self.checkForNewVersion()
         self.networkReachability()
+        
+        nc.addObserver(self, selector: #selector(AppDelegate.onDidWake),
+                       name: NSWorkspace.didWakeNotification, object: nil)
+
+        nc.addObserver(self, selector: #selector(AppDelegate.onWillSleep),
+                       name: NSWorkspace.willSleepNotification, object: nil)
+    }
+    
+    deinit {
+        nc.removeObserver(self)
+    }
+    
+    @objc func onWillSleep() {
+        os_log(.debug, log: log, "Going to sleep, save last state")
+        self.lastState = Player.shared.isPlaying()
+        if self.lastState {
+            Player.shared.pause()
+        }
+    }
+
+    @objc func onDidWake() {
+        os_log(.debug, log: log, "Resumed from sleep, recall the last state")
+        if self.lastState {
+            Player.shared.play()
+        }
     }
 }
 
