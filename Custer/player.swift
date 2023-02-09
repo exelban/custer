@@ -113,16 +113,16 @@ internal class Player: NSObject {
     }
     
     deinit {
-        guard self.observer != nil else {
-            return
-        }
-        
+        self.player.currentItem?.removeObserver(self, forKeyPath: "timedMetadata")
+
         if self.bufferObserver != nil {
             self.player.removeTimeObserver(self.bufferObserver!)
             self.bufferObserver = nil
         }
-        
-        NotificationCenter.default.removeObserver(self.observer!)
+
+        if self.observer != nil {
+            NotificationCenter.default.removeObserver(self.observer!)
+        }
     }
     
     private func streamInterrupted(notification: Notification) {
@@ -263,8 +263,7 @@ internal class Player: NSObject {
             }
         }
         
-        info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = player.currentTime().seconds
-        info[MPMediaItemPropertyPlaybackDuration] = 9999999
+        info[MPNowPlayingInfoPropertyIsLiveStream] = 1.0
         
         DispatchQueue.main.async { [unowned self] in
           self.nowPlayingInfoCenter.nowPlayingInfo = info
