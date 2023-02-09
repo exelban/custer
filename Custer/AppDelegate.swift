@@ -16,7 +16,7 @@ import Updater
 let log = OSLog(subsystem: Bundle.main.bundleIdentifier!, category: "custer")
 var uri: String {
     get {
-        return Store.shared.string(key: "url", defaultValue: "")
+        Store.shared.string(key: "url", defaultValue: "")
     }
     set {
         Store.shared.set(key: "url", value: newValue)
