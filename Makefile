@@ -10,15 +10,16 @@ ZIP_PATH = "$(BUILD_PATH)/$(APP).zip"
 
 build: clean next-version archive notarize sign prepare-dmg prepare-dSYM open
 
-# --- MAIN WORLFLOW FUNCTIONS --- #
+# --- MAIN WORKFLOW FUNCTIONS --- #
 
 archive: next-version clean
 	echo "Starting archiving the project..."
 
 	xcodebuild \
   		-scheme $(APP) \
-  		-destination 'platform=OS X,arch=x86_64' \
+  		-destination 'generic/platform=macOS' \
   		-configuration Release archive \
+  		ONLY_ACTIVE_ARCH=NO \
   		-archivePath $(BUILD_PATH)/$(APP).xcarchive
 
 	echo "Application built, starting the export archive..."
@@ -86,17 +87,10 @@ next-version:
 	/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $$versionNumber" "$(PWD)/Custer/Supporting Files/Info.plist" ;\
 
 check:
-	xcrun altool \
-	  --notarization-info 9b7c4d1f-ae81-4571-9ab1-592289f9d57a \
-	  -itc_provider $(AC_PROVIDER) \
-	  -u $(AC_USERNAME) \
-	  -p @keychain:AC_PASSWORD
+	xcrun notarytool log $(ID) --keychain-profile "AC_PASSWORD"
 
 history:
-	xcrun altool --notarization-history 0 \
-		-itc_provider $(AC_PROVIDER) \
-		-u $(AC_USERNAME) \
-		-p @keychain:AC_PASSWORD
+	xcrun notarytool history --keychain-profile "AC_PASSWORD"
 
 open:
 	echo "Opening working folder..."

@@ -67,9 +67,11 @@ class MenuBar {
         
         if uri == "" {
             self.menu.showAddressView()
+            return
         }
         
         if Player.shared.isError() {
+            Player.shared.reset(play: true)
             return
         }
         
@@ -302,7 +304,10 @@ class Menu: NSMenu {
     }
     
     @objc private func volumeChange(_ sender: NSSlider) {
-        Player.shared.volume = Float(sender.doubleValue)
+        // avoid writing to UserDefaults on every tick while the slider is dragged
+        let eventType = NSApp.currentEvent?.type
+        let isDragging = eventType == .leftMouseDown || eventType == .leftMouseDragged
+        Player.shared.setVolume(Float(sender.doubleValue), persist: !isDragging)
     }
     
     @objc private func clearCache(_ sender: NSMenuItem) {

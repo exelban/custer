@@ -26,7 +26,7 @@
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<key>NSAllowsArbitraryLoads</key>
+		<key>NSAllowsArbitraryLoadsForMedia</key>
 		<true/>
 	</dict>
 	<key>NSHumanReadableCopyright</key>

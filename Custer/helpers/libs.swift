@@ -50,7 +50,7 @@ public class Store {
     }
     
     public func string(key: String, defaultValue value: String) -> String {
-        return (!self.exist(key: key) ? value : defaults.string(forKey: key))!
+        return self.defaults.string(forKey: key) ?? value
     }
     
     public func float(key: String, defaultValue value: Float) -> Float {

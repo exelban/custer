@@ -14,7 +14,7 @@ import os.log
 import AVFoundation
 import MediaPlayer
 
-internal enum player_state: Int {
+internal enum PlayerState: Int {
     case undefined
     
     case error
@@ -36,39 +36,56 @@ internal enum player_state: Int {
     }
 }
 
-internal enum player_error: String {
+internal enum PlayerError: String {
     case wrongURL = "wrong url provided"
     case emptyURL = "no url provided"
     case interrupted = "stream was interrupted"
 }
 
-protocol playerDelegate {
+protocol PlayerDelegate: AnyObject {
     func onError(error: String)
-    func stateChange(state: player_state)
+    func stateChange(state: PlayerState)
+}
+
+// splits an ICY stream title ("Artist - Song") into artist and song name
+internal func parseStreamTitle(_ raw: String?) -> (artist: String, title: String?) {
+    // some radios use UPPERCASE titles -> Do Not Let Them Scream At Us
+    var title = raw
+    if let t = raw, t == t.uppercased() {
+        title = t.capitalized
+    }
+    
+    guard let t = title, t.contains(" - ") else {
+        return ("", title)
+    }
+    
+    let data = t.components(separatedBy: " - ")
+    return (data[0], data[1...].joined(separator: " - "))
 }
 
 internal class Player: NSObject {
     public static let shared = Player()
     
-    public var delegate: playerDelegate? = nil
+    public weak var delegate: PlayerDelegate? = nil
     public var volume: Float {
         get {
             Store.shared.float(key: "volume", defaultValue: 0.8)
         }
         set {
-            self.player.volume = newValue
-            Store.shared.set(key: "volume", value: newValue)
+            self.setVolume(newValue)
         }
     }
     public var buffer: (_ total: Double, _ current: Double) -> Void = {_,_ in }
     
     private var player = AVPlayer()
     private var observer: NSObjectProtocol?
-    private var bufferObserver: Any!
+    private var bufferObserver: Any? = nil
+    private var bufferObserverOwner: AVPlayer? = nil
     private var metadataOutput: AVPlayerItemMetadataOutput?
     
     private var uri: String? = nil
     private var pauseTimestamp: Date? = nil
+    private var resetGeneration: Int = 0
     
     private let nowPlayingInfoCenter: MPNowPlayingInfoCenter = .default()
     private let remoteCommandCenter: MPRemoteCommandCenter = .shared()
@@ -85,7 +102,7 @@ internal class Player: NSObject {
         }
     }
     
-    private var state: player_state = .undefined {
+    private var state: PlayerState = .undefined {
         didSet {
             if let delegate = self.delegate {
                 delegate.stateChange(state: self.state)
@@ -132,67 +149,80 @@ internal class Player: NSObject {
             self.metadataOutput = nil
         }
         
-        if self.bufferObserver != nil {
-            self.player.removeTimeObserver(self.bufferObserver!)
-            self.bufferObserver = nil
+        self.removeBufferObserver()
+    }
+    
+    private func removeBufferObserver() {
+        if let observer = self.bufferObserver, let owner = self.bufferObserverOwner {
+            owner.removeTimeObserver(observer)
         }
+        self.bufferObserver = nil
+        self.bufferObserverOwner = nil
     }
     
     private func streamInterrupted(notification: Notification) {
         guard self.state == .playing else { return }
-        os_log(.error, log: log, "%s", player_error.interrupted.rawValue)
-        self.error = player_error.interrupted.rawValue
+        os_log(.error, log: log, "%s", PlayerError.interrupted.rawValue)
+        self.error = PlayerError.interrupted.rawValue
         self.state = .error
     }
     
     public func reset(play: Bool = false) {
-        guard self.uri != nil else {
-            self.error = player_error.emptyURL.rawValue
+        guard let uri = self.uri else {
+            self.error = PlayerError.emptyURL.rawValue
             self.state = .error
             return
         }
         
         self.error = nil
         
-        guard let url = URL(string: self.uri!) else {
-            self.error = player_error.wrongURL.rawValue
+        guard let url = URL(string: uri) else {
+            self.error = PlayerError.wrongURL.rawValue
             self.state = .error
             return
         }
         
         self.removeObservers()
         
+        self.resetGeneration += 1
+        let generation = self.resetGeneration
+        
         let asset = AVURLAsset(url: url)
         Task { [weak self, play] in
             do {
                 let _ = try await asset.load(.tracks)
-                await self?.setupPlayer(asset: asset, play: play)
+                await self?.setupPlayer(asset: asset, play: play, generation: generation)
             } catch {
-                await self?.handleLoadError(error)
+                await self?.handleLoadError(error, generation: generation)
             }
         }
     }
     
     @MainActor
-    private func setupPlayer(asset: AVURLAsset, play: Bool) {
+    private func setupPlayer(asset: AVURLAsset, play: Bool, generation: Int) {
+        // a newer reset() or stop() superseded this load, discard it
+        guard generation == self.resetGeneration else { return }
+        
         let playerItem = AVPlayerItem(asset: asset)
-
+        
         let output = AVPlayerItemMetadataOutput()
         output.setDelegate(self, queue: .main)
         playerItem.add(output)
         self.metadataOutput = output
-
+        
         self.player = AVPlayer(playerItem: playerItem)
         self.state = .ready
         self.player.volume = self.volume
-
+        
         if play {
             self.play()
         }
     }
     
     @MainActor
-    private func handleLoadError(_ error: Error) {
+    private func handleLoadError(_ error: Error, generation: Int) {
+        guard generation == self.resetGeneration else { return }
+        
         self.error = error.localizedDescription
         self.state = .error
         os_log(.error, log: log, "load asset: %s", error.localizedDescription)
@@ -215,13 +245,12 @@ internal class Player: NSObject {
         self.state = .playing
         os_log(.debug, log: log, "player is playing")
         
-        if self.bufferObserver != nil {
-            self.player.removeTimeObserver(self.bufferObserver!)
-            self.bufferObserver = nil
-        }
-        self.bufferObserver = self.player.addPeriodicTimeObserver(forInterval: CMTimeMake(value: 1, timescale: 10), queue: DispatchQueue.main) { [weak self] time in
+        self.removeBufferObserver()
+        let owner = self.player
+        self.bufferObserver = owner.addPeriodicTimeObserver(forInterval: CMTimeMake(value: 1, timescale: 10), queue: DispatchQueue.main) { [weak self] time in
             self?.buffer(self?.player.currentItem?.totalBuffer() ?? -1, self?.player.currentItem?.currentBuffer() ?? -1)
         }
+        self.bufferObserverOwner = owner
         
         self.nowPlayingInfoCenter.playbackState = .playing
     }
@@ -240,9 +269,25 @@ internal class Player: NSObject {
         os_log(.debug, log: log, "player is paused")
     }
     
+    public func stop() {
+        self.resetGeneration += 1
+        self.removeObservers()
+        
+        self.player.pause()
+        self.player.replaceCurrentItem(with: nil)
+        self.pauseTimestamp = nil
+        self.state = .stopped
+        
+        self.nowPlayingInfoCenter.playbackState = .stopped
+        
+        os_log(.debug, log: log, "player is stopped")
+    }
+    
     public func setURL(_ uri: String) {
-        if uri == "" {
-            os_log(.debug, log: log, "try to set empty url")
+        guard uri != "" else {
+            os_log(.debug, log: log, "url cleared, stopping the player")
+            self.uri = nil
+            self.stop()
             return
         }
         
@@ -250,6 +295,13 @@ internal class Player: NSObject {
         self.reset()
         
         os_log(.debug, log: log, "new url set: %s", uri)
+    }
+    
+    public func setVolume(_ value: Float, persist: Bool = true) {
+        self.player.volume = value
+        if persist {
+            Store.shared.set(key: "volume", value: value)
+        }
     }
     
     public func isPlaying() -> Bool {
@@ -265,23 +317,11 @@ internal class Player: NSObject {
     }
     
     private func setMetadata(title: String?) {
-        
         var info = self.nowPlayingInfoCenter.nowPlayingInfo ?? [String: Any]()
-
-        // some radios use UPPERCASE titles -> Do Not Let Them Scream At Us
-        let capitalizedTitle = title?.capitalized
         
-        info[MPMediaItemPropertyTitle] = capitalizedTitle ?? "Custer Radio"
-        info[MPMediaItemPropertyArtist] = ""
-
-        if let t = capitalizedTitle {
-            if t.contains(" - ") {
-                let data = t.components(separatedBy: " - ")
-                info[MPMediaItemPropertyArtist] = data[0]
-                info[MPMediaItemPropertyTitle] = data[1]
-            }
-        }
-        
+        let parsed = parseStreamTitle(title)
+        info[MPMediaItemPropertyTitle] = parsed.title ?? "Custer Radio"
+        info[MPMediaItemPropertyArtist] = parsed.artist
         info[MPNowPlayingInfoPropertyIsLiveStream] = 1.0
         
         DispatchQueue.main.async { [weak self] in

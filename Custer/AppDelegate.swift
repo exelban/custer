@@ -99,36 +99,36 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func onDidWake() {
         os_log(.debug, log: log, "Resumed from sleep, recall the last state")
-        if self.lastState {
-            if reachability.isConnected {
-                Player.shared.clearBuffer()
-            }
+        if self.lastState && reachability.isConnected {
+            Player.shared.clearBuffer()
+            self.lastState = false
         }
     }
 }
 
-// MARK: - playerDelegate
+// MARK: - PlayerDelegate
 
-extension AppDelegate: playerDelegate {
+extension AppDelegate: PlayerDelegate {
     func onError(error: String) {
         if !reachability.isConnected {
             return
         }
         
-        let alert = NSAlert()
-        alert.messageText = "Error to start player"
-        alert.informativeText = error
-        alert.alertStyle = .warning
-        alert.addButton(withTitle: "OK")
-        
-        if let window = NSApplication.shared.windows.first {
-            alert.beginSheetModal(for: window, completionHandler: nil)
-        }
-        
         os_log(.error, log: log, "error: %s", error)
+        
+        DispatchQueue.main.async {
+            let alert = NSAlert()
+            alert.messageText = "Error to start player"
+            alert.informativeText = error
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: "OK")
+
+            NSApplication.shared.activate()
+            alert.runModal()
+        }
     }
     
-    func stateChange(state: player_state) {
+    func stateChange(state: PlayerState) {
         os_log(.debug, log: log, "new state: %s", state.description)
         
         switch state {
@@ -141,9 +141,8 @@ extension AppDelegate: playerDelegate {
                 }
                 self.initialized = true
             }
-        case .paused: self.menuBar.setImage("play")
+        case .paused, .stopped: self.menuBar.setImage("play")
         case .error, .undefined: self.menuBar.setImage("error")
-        default: break
         }
     }
 }
@@ -174,7 +173,11 @@ extension AppDelegate {
                 os_log(.error, log: log, "no external release found")
                 return
             }
-            let local = Updater.Tag("v\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as! String)")
+            guard let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String else {
+                os_log(.error, log: log, "missing CFBundleShortVersionString")
+                return
+            }
+            let local = Updater.Tag("v\(version)")
             
             if local >= external.tag {
                 return
@@ -202,15 +205,16 @@ extension AppDelegate {
     }
     
     private func networkReachability() {
-        self.reachability.whenReachable = {
-            if self.lastState {
+        self.reachability.whenReachable = { [weak self] in
+            if self?.lastState == true {
                 Player.shared.clearBuffer()
-            } else {
+                self?.lastState = false
+            } else if uri != "" {
                 Player.shared.reset(play: false)
             }
         }
-        self.reachability.whenUnreachable = {
-            self.lastState = Player.shared.isPlaying()
+        self.reachability.whenUnreachable = { [weak self] in
+            self?.lastState = Player.shared.isPlaying()
             Player.shared.pause()
         }
         
