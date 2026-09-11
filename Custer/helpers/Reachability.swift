@@ -11,6 +11,8 @@
 
 import Network
 
+/// Thin wrapper over NWPathMonitor. All state changes and callbacks happen on the main thread,
+/// so `isConnected` can be read from the UI without a race against the monitor queue.
 public class Reachability {
     public var whenReachable: (() -> Void)?
     public var whenUnreachable: (() -> Void)?
@@ -23,17 +25,14 @@ public class Reachability {
     
     public init() {
         self.monitor.pathUpdateHandler = { [weak self] path in
-            guard let self = self else { return }
-            
             let reachable = path.status == .satisfied
-            if reachable != self.isReachable {
+            DispatchQueue.main.async {
+                guard let self = self, reachable != self.isReachable else { return }
                 self.isReachable = reachable
-                DispatchQueue.main.async {
-                    if reachable {
-                        self.whenReachable?()
-                    } else {
-                        self.whenUnreachable?()
-                    }
+                if reachable {
+                    self.whenReachable?()
+                } else {
+                    self.whenUnreachable?()
                 }
             }
         }

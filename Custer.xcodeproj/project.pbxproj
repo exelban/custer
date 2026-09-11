@@ -15,6 +15,7 @@
 		9AA4F5F826FFBC860086DD54 /* Updater in Frameworks */ = {isa = PBXBuildFile; productRef = 9AA4F5F726FFBC860086DD54 /* Updater */; };
 		9AA4F60626FFC4EC0086DD54 /* updater.sh in Resources */ = {isa = PBXBuildFile; fileRef = 9AA4F60526FFC4EC0086DD54 /* updater.sh */; };
 		9AA4F60826FFC5530086DD54 /* updater.sh in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9AA4F60526FFC4EC0086DD54 /* updater.sh */; };
+		9AC0FFEE0001000000000001 /* Custer.icon in Resources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE0001000000000002 /* Custer.icon */; };
 		9AC88F7626F7C67A00F8AE3C /* Reachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC88F7526F7C67A00F8AE3C /* Reachability.swift */; };
 		9AC88F7C26F7D05900F8AE3C /* menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC88F7B26F7D05800F8AE3C /* menu.swift */; };
 /* End PBXBuildFile section */
@@ -51,6 +52,7 @@
 		9A7921BC248D247E00788F2B /* player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = player.swift; sourceTree = "<group>"; };
 		9A7921C0248D518400788F2B /* libs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = libs.swift; sourceTree = "<group>"; };
 		9AA4F60526FFC4EC0086DD54 /* updater.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = updater.sh; sourceTree = "<group>"; };
+		9AC0FFEE0001000000000002 /* Custer.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = Custer.icon; sourceTree = "<group>"; };
 		9AC88F7526F7C67A00F8AE3C /* Reachability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reachability.swift; sourceTree = "<group>"; };
 		9AC88F7B26F7D05800F8AE3C /* menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = menu.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -98,6 +100,7 @@
 		9A7921BB248D1C0200788F2B /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				9AC0FFEE0001000000000002 /* Custer.icon */,
 				9A7921AC248D199400788F2B /* Assets.xcassets */,
 				9A7921B1248D199400788F2B /* Info.plist */,
 				9A7921B9248D1BE800788F2B /* MainMenu.xib */,
@@ -183,6 +186,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9A7921AD248D199400788F2B /* Assets.xcassets in Resources */,
+				9AC0FFEE0001000000000001 /* Custer.icon in Resources */,
 				9AA4F60626FFC4EC0086DD54 /* updater.sh in Resources */,
 				9A7921BA248D1BE800788F2B /* MainMenu.xib in Resources */,
 			);
@@ -334,12 +338,12 @@
 		9A7921B6248D199400788F2B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = Custer;
 				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = "custer/Supporting Files/Info.plist";
@@ -348,7 +352,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
-				MARKETING_VERSION = 1.4.0;
+				MARKETING_VERSION = 1.5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = eu.exelban.custer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -358,12 +362,12 @@
 		9A7921B7248D199400788F2B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = Custer;
 				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = "custer/Supporting Files/Info.plist";
@@ -372,7 +376,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
-				MARKETING_VERSION = 1.4.0;
+				MARKETING_VERSION = 1.5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = eu.exelban.custer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;

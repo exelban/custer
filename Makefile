@@ -6,7 +6,7 @@ APP_PATH = "$(BUILD_PATH)/$(APP).app"
 ZIP_PATH = "$(BUILD_PATH)/$(APP).zip"
 
 .SILENT: archive notarize sign prepare-dmg prepare-dSYM clean next-version check history
-.PHONY: build archive notarize sign prepare-dmg prepare-dSYM clean next-version check history dep
+.PHONY: build archive notarize sign prepare-dmg prepare-dSYM clean next-version check history dep deploy-web
 
 build: clean next-version archive notarize sign prepare-dmg prepare-dSYM open
 
@@ -95,3 +95,8 @@ history:
 open:
 	echo "Opening working folder..."
 	open $(PWD)
+
+# --- WEB --- #
+
+deploy-web:
+	npx wrangler pages deploy ./web --project-name custer --branch master --commit-dirty=true

@@ -14,75 +14,43 @@ import os.log
 import Updater
 
 let log = OSLog(subsystem: Bundle.main.bundleIdentifier!, category: "custer")
-var uri: String {
-    get {
-        Store.shared.string(key: "url", defaultValue: "")
-    }
-    set {
-        Store.shared.set(key: "url", value: newValue)
-        Player.shared.setURL(newValue)
-    }
-}
-
-struct Stream: Codable {
-    var name: String
-    var url: String
-}
-
-var streams: [Stream] {
-    get {
-        guard let data = UserDefaults.standard.data(forKey: "streams"),
-              let arr = try? JSONDecoder().decode([Stream].self, from: data) else {
-            return []
-        }
-        return arr
-    }
-    set {
-        if let data = try? JSONEncoder().encode(newValue) {
-            UserDefaults.standard.set(data, forKey: "streams")
-        }
-    }
-}
 
 @main
+@MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
     private let menuBar: MenuBar = MenuBar()
     private let updater = Updater(name: "Custer", providers: [Updater.Github(user: "exelban", repo: "custer", asset: "Custer.dmg")])
     private let reachability = Reachability()
-    
-    private let autostart: Bool = Store.shared.bool(key: "autoplay", defaultValue: false)
-    private var lastState: Bool = false
-    private var initialized: Bool = false
     
     private let nc = NSWorkspace.shared.notificationCenter
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         self.updater.cleanup()
         
-        // migrate legacy single url into streams list
-        if streams.isEmpty && uri != "" {
-            streams = [Stream(name: "Stream", url: uri)]
-        }
-        
-        if uri == "" {
-            os_log(.debug, log: log, "Stream url is not defined")
-            self.menuBar.menu.showAddressView()
-        }
-        
-        self.menuBar.menu.rebuildStreamsMenu()
+        Settings.shared.migrateLegacy()
         
         Player.shared.delegate = self
-        Player.shared.setURL(uri)
+        Player.shared.isNetworkReachable = { [weak self] in self?.reachability.isConnected ?? true }
+        
+        self.menuBar.menu.actions = self
+        self.menuBar.menu.rebuild()
         
         self.defaultValues()
-        self.checkForNewVersion()
         self.networkReachability()
+        self.checkForNewVersion()
         
         nc.addObserver(self, selector: #selector(AppDelegate.onDidWake),
                        name: NSWorkspace.didWakeNotification, object: nil)
-        
         nc.addObserver(self, selector: #selector(AppDelegate.onWillSleep),
                        name: NSWorkspace.willSleepNotification, object: nil)
+        
+        if let stream = Settings.shared.currentStream {
+            Player.shared.setStream(stream, play: Settings.shared.autoplay)
+        } else {
+            os_log(.debug, log: log, "Stream url is not defined")
+            Player.shared.setStream(nil, play: false)
+            self.menuBar.menu.showAddressView()
+        }
     }
     
     deinit {
@@ -90,59 +58,99 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc func onWillSleep() {
-        os_log(.debug, log: log, "Going to sleep, save last state")
-        self.lastState = Player.shared.isPlaying()
-        if self.lastState {
-            Player.shared.pause()
-        }
+        os_log(.debug, log: log, "Going to sleep, suspend playback")
+        Player.shared.suspend()
     }
 
     @objc func onDidWake() {
-        os_log(.debug, log: log, "Resumed from sleep, recall the last state")
-        if self.lastState && reachability.isConnected {
-            Player.shared.clearBuffer()
-            self.lastState = false
-        }
+        os_log(.debug, log: log, "Resumed from sleep, resume playback if needed")
+        Player.shared.resumeIfNeeded()
     }
 }
 
 // MARK: - PlayerDelegate
 
 extension AppDelegate: PlayerDelegate {
-    func onError(error: String) {
-        if !reachability.isConnected {
-            return
-        }
-        
+    func onError(error: String, userInitiated: Bool) {
         os_log(.error, log: log, "error: %s", error)
+        self.menuBar.menu.refreshStatus()
         
-        DispatchQueue.main.async {
-            let alert = NSAlert()
-            alert.messageText = "Error to start player"
-            alert.informativeText = error
-            alert.alertStyle = .warning
-            alert.addButton(withTitle: "OK")
-
-            NSApplication.shared.activate()
-            alert.runModal()
-        }
+        // automatic actions (wake, reconnect, network change) must not pop dialogs in front of the user
+        guard userInitiated, self.reachability.isConnected else { return }
+        
+        let name = Player.shared.stream?.displayName ?? "the stream"
+        let alert = NSAlert()
+        alert.messageText = "Could not play \(name)"
+        alert.informativeText = error.prefix(1).uppercased() + error.dropFirst() + "."
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "OK")
+        
+        NSApplication.shared.activate()
+        alert.runModal()
     }
     
     func stateChange(state: PlayerState) {
         os_log(.debug, log: log, "new state: %s", state.description)
+        self.menuBar.setState(state)
+        self.menuBar.menu.refreshStatus()
+    }
+    
+    func infoChange() {
+        self.menuBar.refreshTooltip()
+        self.menuBar.menu.refreshStatus()
+    }
+}
+
+// MARK: - MenuActions
+
+extension AppDelegate: MenuActions {
+    func select(stream: Stream) {
+        Settings.shared.currentURL = stream.url
+        Player.shared.setStream(stream, play: true)
+    }
+    
+    func save(stream: Stream, at index: Int?) {
+        var list = Settings.shared.streams
+        let wasCurrent: Bool
         
-        switch state {
-        case .playing: self.menuBar.setImage("pause")
-        case .ready:
-            self.menuBar.setImage("play")
-            if self.autostart && !self.initialized {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    Player.shared.play()
-                }
-                self.initialized = true
+        if let i = index, i >= 0 && i < list.count {
+            wasCurrent = list[i].url == Settings.shared.currentURL
+            list[i] = stream
+        } else {
+            wasCurrent = false
+            list.append(stream)
+        }
+        Settings.shared.streams = list
+        
+        if wasCurrent {
+            Settings.shared.currentURL = stream.url
+            let player = Player.shared
+            if player.stream?.url == stream.url {
+                player.updateStreamInfo(stream) // only the name changed, keep playing
+            } else {
+                player.setStream(stream, play: player.wantsToPlay)
             }
-        case .paused, .stopped: self.menuBar.setImage("play")
-        case .error, .undefined: self.menuBar.setImage("error")
+        } else if Settings.shared.currentURL.isEmpty {
+            // the very first stream: select it and start listening right away
+            self.select(stream: stream)
+        }
+    }
+    
+    func remove(streamAt index: Int) {
+        var list = Settings.shared.streams
+        guard index >= 0 && index < list.count else { return }
+        let removed = list.remove(at: index)
+        Settings.shared.streams = list
+        
+        guard removed.url == Settings.shared.currentURL else { return }
+        
+        let player = Player.shared
+        if let next = list.first {
+            Settings.shared.currentURL = next.url
+            player.setStream(next, play: player.wantsToPlay)
+        } else {
+            Settings.shared.currentURL = ""
+            player.setStream(nil, play: false)
         }
     }
 }
@@ -156,66 +164,65 @@ extension AppDelegate {
             LaunchAtLogin.isEnabled = true
         }
         
-        if Store.shared.exist(key: "icon") {
-            let dockIconStatus = Store.shared.bool(key: "icon", defaultValue: false) ? NSApplication.ActivationPolicy.regular : NSApplication.ActivationPolicy.accessory
-            NSApp.setActivationPolicy(dockIconStatus)
-        }
+        // the dock icon option was removed; the app is menu bar only now
+        Store.shared.remove(key: "icon")
     }
     
     private func checkForNewVersion() {
         self.updater.check() { result, error in
-            if error != nil {
-                os_log(.error, log: log, "error updater.check(): %s", "\(error!)")
-                return
+            Task { @MainActor in
+                self.handleUpdateResult(result, error: error)
             }
-            
-            guard let external = result else {
-                os_log(.error, log: log, "no external release found")
-                return
+        }
+    }
+    
+    private func handleUpdateResult(_ result: Updater.Release?, error: [Error]?) {
+        if let errors = error, !errors.isEmpty {
+            os_log(.error, log: log, "error updater.check(): %s", "\(errors)")
+            return
+        }
+        
+        guard let external = result else {
+            os_log(.error, log: log, "no external release found")
+            return
+        }
+        guard let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String else {
+            os_log(.error, log: log, "missing CFBundleShortVersionString")
+            return
+        }
+        let local = Updater.Tag("v\(version)")
+        
+        if local >= external.tag {
+            return
+        }
+        
+        os_log(.debug, log: log, "show update window because new version of app found: %s", "\(external.tag.raw)")
+        
+        let alert = NSAlert()
+        alert.messageText = "New version available"
+        alert.informativeText = "Current version:   \(local.raw)\nLatest version:     \(external.tag.raw)"
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "Install")
+        alert.addButton(withTitle: "Cancel")
+        
+        NSApplication.shared.activate()
+        if alert.runModal() == .alertFirstButtonReturn {
+            if let url = URL(string: external.url) {
+                self.updater.download(url, done: { path in
+                    self.updater.install(path: path)
+                })
             }
-            guard let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String else {
-                os_log(.error, log: log, "missing CFBundleShortVersionString")
-                return
-            }
-            let local = Updater.Tag("v\(version)")
-            
-            if local >= external.tag {
-                return
-            }
-            
-            DispatchQueue.main.async(execute: {
-                os_log(.debug, log: log, "show update window because new version of app found: %s", "\(external.tag.raw)")
-                
-                let alert = NSAlert()
-                alert.messageText = "New version available"
-                alert.informativeText = "Current version:   \(local.raw)\nLatest version:     \(external.tag.raw)"
-                alert.alertStyle = .informational
-                alert.addButton(withTitle: "Install")
-                alert.addButton(withTitle: "Cancel")
-                
-                if alert.runModal() == .alertFirstButtonReturn {
-                    if let url = URL(string: external.url) {
-                        self.updater.download(url, done: { path in
-                            self.updater.install(path: path)
-                        })
-                    }
-                }
-            })
         }
     }
     
     private func networkReachability() {
-        self.reachability.whenReachable = { [weak self] in
-            if self?.lastState == true {
-                Player.shared.clearBuffer()
-                self?.lastState = false
-            } else if uri != "" {
-                Player.shared.reset(play: false)
-            }
+        self.reachability.whenReachable = {
+            os_log(.debug, log: log, "network is reachable")
+            Player.shared.resumeIfNeeded()
         }
-        self.reachability.whenUnreachable = { [weak self] in
-            self?.lastState = Player.shared.isPlaying()
-            Player.shared.pause()
+        self.reachability.whenUnreachable = {
+            os_log(.debug, log: log, "network is unreachable")
+            Player.shared.suspend()
         }
         
         self.reachability.start()

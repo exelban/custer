@@ -16,12 +16,15 @@ Custer supported on macOS 14.6 (Sonoma) and higher.
 Custer is an application that allows you to listen to your favorite internet radio and control it from the menu bar.
 
  - Simple and lightweight
- - Control stream from the menu bar
+ - Control stream from the menu bar: left click to play/pause, right click (or control-click) for the menu, scroll over the icon to change the volume
+ - Multiple streams with quick switching (⌘1–⌘9 in the menu)
+ - Shows the current song title in the menu and tooltip, with one click to copy it
  - Autoplay on launch
- - Volume control
+ - Volume control and mute
  - Control with media keys
- - Now Playing integration (track info in Control Center)
- - Automatic pause/resume on sleep/wake
+ - Now Playing integration (track info and artwork in Control Center)
+ - Automatic pause/resume on sleep/wake and when the network drops
+ - Automatic reconnect with backoff when a stream stalls or fails
 
 ## License
 [MIT License](https://github.com/exelban/custer/blob/master/LICENSE)

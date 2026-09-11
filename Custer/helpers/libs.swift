@@ -37,9 +37,11 @@ public struct LaunchAtLogin {
 public class Store {
     static public let shared: Store = Store()
     
-    private let defaults = UserDefaults.standard
+    private let defaults: UserDefaults
     
-    public init() {}
+    public init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+    }
     
     public func exist(key: String) -> Bool {
         return self.defaults.object(forKey: key) == nil ? false : true
@@ -57,6 +59,10 @@ public class Store {
         return (!self.exist(key: key) ? value : defaults.float(forKey: key))
     }
     
+    public func data(key: String) -> Data? {
+        return self.defaults.data(forKey: key)
+    }
+    
     public func set(key: String, value: Bool) {
         self.defaults.set(value, forKey: key)
     }
@@ -69,10 +75,116 @@ public class Store {
         self.defaults.set(value, forKey: key)
     }
     
+    public func set(key: String, value: Data) {
+        self.defaults.set(value, forKey: key)
+    }
+    
+    public func remove(key: String) {
+        self.defaults.removeObject(forKey: key)
+    }
+    
     public func reset() {
         self.defaults.dictionaryRepresentation().keys.forEach { key in
             self.defaults.removeObject(forKey: key)
         }
+    }
+}
+
+// MARK: - Streams
+
+public struct Stream: Codable, Equatable {
+    public var name: String
+    public var url: String
+    
+    public init(name: String, url: String) {
+        self.name = name
+        self.url = url
+    }
+    
+    /// Name to show in the UI: the user-given name, or the URL when no name is set.
+    public var displayName: String {
+        self.name.trimmingCharacters(in: .whitespaces).isEmpty ? self.url : self.name
+    }
+    
+    /// Streams must be http(s) URLs with a host; anything else is rejected by the editor.
+    public static func validate(url raw: String) -> String? {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        guard let url = URL(string: trimmed),
+              let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https",
+              let host = url.host, !host.isEmpty else {
+            return nil
+        }
+        return trimmed
+    }
+}
+
+/// All persisted user settings that concern streams. Replaces the former global `uri` and `streams` variables,
+/// so that changing a value here has no hidden side effects on the player.
+public final class Settings {
+    public static let shared = Settings()
+    
+    private let store: Store
+    
+    public init(store: Store = .shared) {
+        self.store = store
+    }
+    
+    public var streams: [Stream] {
+        get {
+            guard let data = self.store.data(key: "streams"),
+                  let list = try? JSONDecoder().decode([Stream].self, from: data) else {
+                return []
+            }
+            return list
+        }
+        set {
+            if let data = try? JSONEncoder().encode(newValue) {
+                self.store.set(key: "streams", value: data)
+            }
+        }
+    }
+    
+    public var currentURL: String {
+        get { self.store.string(key: "url", defaultValue: "") }
+        set { self.store.set(key: "url", value: newValue) }
+    }
+    
+    /// The selected stream, or a nameless stream built from the URL when the URL is not in the list.
+    public var currentStream: Stream? {
+        let url = self.currentURL
+        guard !url.isEmpty else { return nil }
+        return self.streams.first(where: { $0.url == url }) ?? Stream(name: "", url: url)
+    }
+    
+    public var autoplay: Bool {
+        get { self.store.bool(key: "autoplay", defaultValue: false) }
+        set { self.store.set(key: "autoplay", value: newValue) }
+    }
+    
+    /// Older versions stored a single URL only; turn it into a one-entry list.
+    public func migrateLegacy() {
+        if self.streams.isEmpty && !self.currentURL.isEmpty {
+            self.streams = [Stream(name: "Stream", url: self.currentURL)]
+        }
+    }
+}
+
+public extension String {
+    /// Shortens the string with a trailing ellipsis until it fits `width` points when drawn in `font`.
+    func truncated(toWidth width: CGFloat, font: NSFont) -> String {
+        let attributes: [NSAttributedString.Key: Any] = [.font: font]
+        guard (self as NSString).size(withAttributes: attributes).width > width else { return self }
+        
+        var text = Substring(self)
+        while !text.isEmpty {
+            text = text.dropLast()
+            let candidate = text.trimmingCharacters(in: .whitespaces) + "…"
+            if (candidate as NSString).size(withAttributes: attributes).width <= width {
+                return candidate
+            }
+        }
+        return "…"
     }
 }
 
@@ -96,6 +208,18 @@ public extension AVPlayerItem {
 }
 
 public extension Double {
+    /// Fixed-width clock style ("0:05", "12:34", "1:02:03") so a live-updating label keeps the same length.
+    func clockString() -> String {
+        let total = max(Int(self.rounded()), 0)
+        let hours = total / 3600
+        let minutes = (total % 3600) / 60
+        let seconds = total % 60
+        if hours > 0 {
+            return String(format: "%d:%02d:%02d", hours, minutes, seconds)
+        }
+        return String(format: "%d:%02d", minutes, seconds)
+    }
+    
     func secondsToHoursMinutesSeconds() -> (Int?, Int?, Int?) {
         let hrs = self / 3600
         let mins = (self.truncatingRemainder(dividingBy: 3600)) / 60
