@@ -29,16 +29,16 @@ assert any(
 scripts = list(contents.rglob("updater.sh"))
 binary = contents / "MacOS" / info["CFBundleExecutable"]
 
-# Inspect symbols as well as resources: Swift small string literals may be encoded
-# as instructions, so searching the executable for "Custer.dmg" is unreliable.
-symbols = subprocess.check_output(["nm", "-j", str(binary)], stderr=subprocess.DEVNULL)
-has_updater = b"7Updater" in symbols
+# Inspect mangled names in both symbols and Swift runtime metadata: archives strip
+# local symbols, but retain runtime type names. Swift small string literals may be
+# encoded as instructions, so searching for "Custer.dmg" is unreliable.
+has_updater = b"7Updater" in binary.read_bytes()
 if store:
     assert not scripts, "App Store bundle contains updater.sh"
     assert not has_updater, "App Store executable links the Updater package"
 else:
     assert scripts, "GitHub bundle is missing updater.sh"
-    assert has_updater, "GitHub executable is missing Updater symbols"
+    assert has_updater, "GitHub executable is missing Updater code"
 
 if args.signed:
     subprocess.run(
