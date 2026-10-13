@@ -11,7 +11,9 @@
 
 import Cocoa
 import os.log
+#if !APP_STORE
 import Updater
+#endif
 
 let log = OSLog(subsystem: Bundle.main.bundleIdentifier!, category: "custer")
 
@@ -19,13 +21,21 @@ let log = OSLog(subsystem: Bundle.main.bundleIdentifier!, category: "custer")
 @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
     private let menuBar: MenuBar = MenuBar()
-    private let updater = Updater(name: "Custer", providers: [Updater.Github(user: "exelban", repo: "custer", asset: "Custer.dmg")])
+    #if !APP_STORE
+    private let updater = AppDelegate.makeUpdater()
+    
+    nonisolated private static func makeUpdater() -> Updater {
+        return Updater(name: "Custer", providers: [Updater.Github(user: "exelban", repo: "custer", asset: "Custer.dmg")])
+    }
+    #endif
     private let reachability = Reachability()
     
     private let nc = NSWorkspace.shared.notificationCenter
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        #if !APP_STORE
         self.updater.cleanup()
+        #endif
         
         Settings.shared.migrateLegacy()
         
@@ -35,9 +45,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         self.menuBar.menu.actions = self
         self.menuBar.menu.rebuild()
         
-        self.defaultValues()
         self.networkReachability()
+        #if !APP_STORE
         self.checkForNewVersion()
+        #endif
         
         nc.addObserver(self, selector: #selector(AppDelegate.onDidWake),
                        name: NSWorkspace.didWakeNotification, object: nil)
@@ -158,20 +169,15 @@ extension AppDelegate: MenuActions {
 // MARK: - helpers
 
 extension AppDelegate {
-    private func defaultValues() {
-        if !Store.shared.exist(key: "runAtLoginInitialized") {
-            Store.shared.set(key: "runAtLoginInitialized", value: true)
-            LaunchAtLogin.isEnabled = true
-        }
-        
-        // the dock icon option was removed; the app is menu bar only now
-        Store.shared.remove(key: "icon")
-    }
-    
+    #if !APP_STORE
     private func checkForNewVersion() {
-        self.updater.check() { result, error in
-            Task { @MainActor in
-                self.handleUpdateResult(result, error: error)
+        // The package waits synchronously for its providers; keep launch/playback responsive.
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            let updater = AppDelegate.makeUpdater()
+            updater.check() { result, error in
+                Task { @MainActor in
+                    self?.handleUpdateResult(result, error: error)
+                }
             }
         }
     }
@@ -214,6 +220,8 @@ extension AppDelegate {
             }
         }
     }
+    
+    #endif
     
     private func networkReachability() {
         self.reachability.whenReachable = {

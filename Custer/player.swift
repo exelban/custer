@@ -190,7 +190,7 @@ internal class Player: NSObject {
         self.delegate?.infoChange()
         self.reconnectAttempt = 0
         
-        os_log(.debug, log: log, "new stream set: %s", stream.url)
+        os_log(.debug, log: log, "new stream selected")
         self.reset(play: play, userInitiated: true)
     }
     
@@ -279,7 +279,7 @@ internal class Player: NSObject {
     
     /// Left click / media key toggle.
     public func toggle() {
-        if self.state == .playing || (self.state == .loading && self.wantsToPlay) {
+        if self.wantsToPlay {
             self.pause()
         } else {
             self.play()
@@ -383,15 +383,32 @@ internal class Player: NSObject {
         
         self.generation += 1
         let generation = self.generation
-        let asset = AVURLAsset(url: url)
         
         self.loadTask = Task { [weak self] in
             do {
-                try await Player.load(asset: asset, timeout: Player.loadTimeout)
-                guard !Task.isCancelled else { return }
-                self?.setupPlayer(asset: asset, generation: generation)
+                let urls = try await StreamResolver.resolve(url)
+                var lastError: Error = StreamResolver.ResolutionError.emptyPlaylist
+
+                for candidate in urls {
+                    try Task.checkCancellation()
+                    let asset = AVURLAsset(url: candidate)
+
+                    do {
+                        try await Player.load(asset: asset, timeout: Player.loadTimeout)
+                        try Task.checkCancellation()
+                        self?.setupPlayer(asset: asset, generation: generation)
+                        return
+                    } catch {
+                        try Task.checkCancellation()
+                        lastError = error
+                    }
+                }
+
+                throw lastError
             } catch {
-                guard !Task.isCancelled else { return }
+                guard !Task.isCancelled else {
+                    return
+                }
                 self?.handleLoadError(error, generation: generation, userInitiated: userInitiated)
             }
         }

@@ -18,19 +18,24 @@ public struct LaunchAtLogin {
 
     public static var isEnabled: Bool {
         get {
-            service.status == .enabled
+            return self.service.status == .enabled
         }
-        set {
-            do {
-                if newValue {
-                    try service.register()
-                } else {
-                    try service.unregister()
-                }
-            } catch {
-                print("LaunchAtLogin: failed to \(newValue ? "register" : "unregister"): \(error)")
-            }
+    }
+
+    public static var requiresApproval: Bool {
+        return self.service.status == .requiresApproval
+    }
+
+    public static func setEnabled(_ enabled: Bool) throws {
+        if enabled {
+            try self.service.register()
+        } else {
+            try self.service.unregister()
         }
+    }
+
+    public static func openSettings() {
+        SMAppService.openSystemSettingsLoginItems()
     }
 }
 
@@ -160,6 +165,20 @@ public final class Settings {
     public var autoplay: Bool {
         get { self.store.bool(key: "autoplay", defaultValue: false) }
         set { self.store.set(key: "autoplay", value: newValue) }
+    }
+    
+    public var clickOpensMenu: Bool {
+        get {
+            #if APP_STORE
+            let defaultValue = true
+            #else
+            let defaultValue = false
+            #endif
+            return self.store.bool(key: "clickOpensMenu", defaultValue: defaultValue)
+        }
+        set {
+            self.store.set(key: "clickOpensMenu", value: newValue)
+        }
     }
     
     /// Older versions stored a single URL only; turn it into a one-entry list.

@@ -78,7 +78,9 @@ class MenuBar {
             lines.append("No stream selected")
         }
         lines.append("")
-        lines.append("Left click: play/pause · Right click: menu · Scroll: volume")
+        lines.append(Settings.shared.clickOpensMenu
+            ? "Click: menu · Scroll: volume"
+            : "Left click: play/pause · Right click: menu · Scroll: volume")
         self.item.button?.toolTip = lines.joined(separator: "\n")
     }
     
@@ -103,31 +105,21 @@ class MenuBar {
         button.layer?.add(animation, forKey: "clickBounce")
     }
     
-    private func showMenu() {
+    @objc private func click(_ sender: NSStatusBarButton) {
+        let event = NSApp.currentEvent
+        let isContextClick = event?.type == .rightMouseDown || event?.modifierFlags.contains(.control) == true
+        if !Settings.shared.clickOpensMenu && !isContextClick {
+            self.animateClick()
+            if Player.shared.stream == nil {
+                self.menu.showAddressView()
+            } else {
+                Player.shared.toggle()
+            }
+            return
+        }
         self.item.menu = self.menu
         self.item.button?.performClick(nil)
         self.item.menu = nil
-    }
-    
-    @objc private func click(_ sender: NSStatusBarButton) {
-        guard let event: NSEvent = NSApp.currentEvent else {
-            return
-        }
-        
-        let isControlClick = event.type == .leftMouseDown && event.modifierFlags.contains(.control)
-        if event.type == .rightMouseDown || isControlClick {
-            self.showMenu()
-            return
-        }
-        
-        self.animateClick()
-        
-        if Player.shared.stream == nil {
-            self.menu.showAddressView()
-            return
-        }
-        
-        Player.shared.toggle()
     }
     
     private func scroll(_ event: NSEvent) {
@@ -164,6 +156,7 @@ class MenuBar {
 class Menu: NSMenu, NSMenuDelegate {
     public weak var actions: MenuActions? = nil
     
+    private let playItem = NSMenuItem(title: "Play", action: #selector(togglePlayback), keyEquivalent: " ")
     private let streamItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
     private let trackItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
     private let copyTitleItem = NSMenuItem(title: "Copy song title", action: #selector(copyTitle), keyEquivalent: "c")
@@ -178,6 +171,8 @@ class Menu: NSMenu, NSMenuDelegate {
         self.delegate = self
         self.autoenablesItems = false
         
+        self.playItem.target = self
+        self.playItem.keyEquivalentModifierMask = []
         self.streamItem.isEnabled = false
         self.trackItem.isEnabled = false
         self.copyTitleItem.target = self
@@ -225,6 +220,9 @@ class Menu: NSMenu, NSMenuDelegate {
     /// Rebuilds the whole menu; cheap enough to do whenever the stream list changes.
     public func rebuild() {
         self.removeAllItems()
+        
+        self.addItem(self.playItem)
+        self.addItem(NSMenuItem.separator())
         
         // now playing
         self.addItem(self.streamItem)
@@ -285,16 +283,47 @@ class Menu: NSMenu, NSMenuDelegate {
         self.addItem(NSMenuItem.separator())
         
         // settings
+        let clickMenu = NSMenu()
+        for (title, opensMenu) in [("Open Menu", true), ("Play / Pause", false)] {
+            let option = NSMenuItem(title: title, action: #selector(self.setClickAction), keyEquivalent: "")
+            option.target = self
+            option.tag = opensMenu ? 1 : 0
+            option.state = Settings.shared.clickOpensMenu == opensMenu ? .on : .off
+            clickMenu.addItem(option)
+        }
+        let clickAction = NSMenuItem(title: "Left-click action", action: nil, keyEquivalent: "")
+        clickAction.submenu = clickMenu
+        self.addItem(clickAction)
+        
         let autoplay = NSMenuItem(title: "Autoplay on launch", action: #selector(self.toggleAutoplay), keyEquivalent: "")
         autoplay.state = Settings.shared.autoplay ? .on : .off
         autoplay.target = self
         self.addItem(autoplay)
         
-        let launchAtLogin = NSMenuItem(title: "Start at login", action: #selector(self.toggleLaunchAtLogin), keyEquivalent: "")
+        let launchAtLogin = NSMenuItem(
+            title: LaunchAtLogin.requiresApproval ? "Start at login — Approve in System Settings…" : "Start at login",
+            action: #selector(self.toggleLaunchAtLogin),
+            keyEquivalent: ""
+        )
         launchAtLogin.state = LaunchAtLogin.isEnabled ? .on : .off
         launchAtLogin.target = self
         self.addItem(launchAtLogin)
         
+        self.addItem(NSMenuItem.separator())
+
+        let aboutMenu = NSMenu()
+        let help = NSMenuItem(title: "Help / Contact…", action: #selector(self.showHelp), keyEquivalent: "")
+        help.target = self
+        aboutMenu.addItem(help)
+
+        let privacy = NSMenuItem(title: "Privacy Policy…", action: #selector(self.showPrivacy), keyEquivalent: "")
+        privacy.target = self
+        aboutMenu.addItem(privacy)
+
+        let about = NSMenuItem(title: "About Custer…", action: nil, keyEquivalent: "")
+        about.submenu = aboutMenu
+        self.addItem(about)
+
         self.addItem(NSMenuItem.separator())
         self.addItem(NSMenuItem(title: "Quit Custer", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         
@@ -325,6 +354,8 @@ class Menu: NSMenu, NSMenuDelegate {
     
     public func refreshStatus() {
         let player = Player.shared
+        self.playItem.title = player.wantsToPlay ? "Pause" : "Play"
+        self.playItem.isEnabled = player.stream != nil
         
         // long titles must not widen the whole menu: cap the header lines at the slider row width
         let font = NSFont.menuFont(ofSize: 0)
@@ -383,7 +414,7 @@ class Menu: NSMenu, NSMenuDelegate {
     
     // the live-lag readout only needs updating while the menu is visible
     func menuWillOpen(_ menu: NSMenu) {
-        self.refreshStatus()
+        self.rebuild()
         self.slider.doubleValue = Double(Player.shared.volume)
         self.refreshTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(self.refreshTick), userInfo: nil, repeats: true)
         RunLoop.main.add(self.refreshTimer!, forMode: .eventTracking)
@@ -443,7 +474,8 @@ class Menu: NSMenu, NSMenuDelegate {
             let alert = NSAlert()
             alert.alertStyle = .informational
             alert.messageText = editing == nil ? "Add stream" : "Edit stream"
-            alert.informativeText = errorText ?? "Give the stream a name and paste its http(s) address."
+            let menuGesture = Settings.shared.clickOpensMenu ? "Click" : "Right-click or Control-click"
+            alert.informativeText = errorText ?? "Paste a direct audio stream or M3U/PLS playlist address (HTTP or HTTPS), not a station webpage. \(menuGesture) Custer’s menu bar icon for controls and Quit."
             alert.addButton(withTitle: editing == nil ? "Add" : "Save")
             alert.addButton(withTitle: "Cancel")
             if editing != nil {
@@ -529,6 +561,19 @@ class Menu: NSMenu, NSMenuDelegate {
     
     // MARK: - settings actions
     
+    @objc private func setClickAction(_ sender: NSMenuItem) {
+        Settings.shared.clickOpensMenu = sender.tag == 1
+        self.rebuild()
+        Player.shared.delegate?.infoChange()
+        if !Settings.shared.clickOpensMenu {
+            let alert = NSAlert()
+            alert.messageText = "Left-click now plays or pauses"
+            alert.informativeText = "Right-click or Control-click the menu bar icon to open the menu, change this setting, or quit Custer."
+            NSApp.activate()
+            alert.runModal()
+        }
+    }
+    
     @objc private func toggleAutoplay(_ sender: NSMenuItem) {
         let state = sender.state != .on
         sender.state = state ? .on : .off
@@ -536,12 +581,37 @@ class Menu: NSMenu, NSMenuDelegate {
     }
     
     @objc private func toggleLaunchAtLogin(_ sender: NSMenuItem) {
-        let state = sender.state != .on
-        sender.state = state ? .on : .off
-        
-        LaunchAtLogin.isEnabled = state
-        if !Store.shared.exist(key: "runAtLoginInitialized") {
-            Store.shared.set(key: "runAtLoginInitialized", value: true)
+        if LaunchAtLogin.requiresApproval {
+            LaunchAtLogin.openSettings()
+            return
         }
+
+        do {
+            try LaunchAtLogin.setEnabled(!LaunchAtLogin.isEnabled)
+            if LaunchAtLogin.requiresApproval {
+                LaunchAtLogin.openSettings()
+            }
+        } catch {
+            let alert = NSAlert()
+            alert.messageText = "Could not change Start at login"
+            alert.informativeText = error.localizedDescription
+            NSApp.activate()
+            alert.runModal()
+        }
+
+        sender.state = LaunchAtLogin.isEnabled ? .on : .off
+    }
+    
+    @objc private func togglePlayback(_ sender: NSMenuItem) {
+        Player.shared.toggle()
+        self.refreshStatus()
+    }
+    
+    @objc private func showHelp(_ sender: NSMenuItem) {
+        NSWorkspace.shared.open(URL(string: "https://custer.dev/support.html")!)
+    }
+    
+    @objc private func showPrivacy(_ sender: NSMenuItem) {
+        NSWorkspace.shared.open(URL(string: "https://custer.dev/privacy.html")!)
     }
 }

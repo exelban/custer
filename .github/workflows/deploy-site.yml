@@ -1,15 +1,15 @@
-name: Deploy web
+name: Deploy site
 
 on:
   push:
     branches: [master]
     paths:
-      - "web/**"
-      - ".github/workflows/deploy-web.yml"
+      - "site/**"
+      - ".github/workflows/deploy-site.yml"
   workflow_dispatch:
 
 concurrency:
-  group: deploy-web
+  group: deploy-site
   cancel-in-progress: true
 
 permissions:
@@ -26,4 +26,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy ./web --project-name custer --branch master
+          command: pages deploy ./site --project-name custer --branch master

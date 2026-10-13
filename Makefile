@@ -1,34 +1,46 @@
 APP = Custer
 BUNDLE_ID = eu.exelban.$(APP)
 
-BUILD_PATH = $(PWD)/build
+BUILD_PATH = $(PWD)/build/github
+APPSTORE_PATH = $(PWD)/build/appstore
 APP_PATH = "$(BUILD_PATH)/$(APP).app"
 ZIP_PATH = "$(BUILD_PATH)/$(APP).zip"
 
-.SILENT: archive notarize sign prepare-dmg prepare-dSYM clean next-version check history
-.PHONY: build archive notarize sign prepare-dmg prepare-dSYM clean next-version check history dep deploy-web
+.SILENT: archive notarize sign prepare-dmg prepare-dSYM clean check history
+.PHONY: release-github release-appstore verify-builds test build archive notarize sign prepare-dmg prepare-dSYM clean check history dep deploy-site
 
-build: clean next-version archive notarize sign prepare-dmg prepare-dSYM open
+# Set Version and Build in each target’s General > Identity settings in Xcode.
+release-github: build
+
+build:
+	$(MAKE) archive
+	$(MAKE) notarize
+	$(MAKE) sign
+	$(MAKE) prepare-dmg
+	$(MAKE) prepare-dSYM
 
 # --- MAIN WORKFLOW FUNCTIONS --- #
 
-archive: next-version clean
+archive:
 	echo "Starting archiving the project..."
 
 	xcodebuild \
-  		-scheme $(APP) \
-  		-destination 'generic/platform=macOS' \
-  		-configuration Release archive \
-  		ONLY_ACTIVE_ARCH=NO \
-  		-archivePath $(BUILD_PATH)/$(APP).xcarchive
+		-allowProvisioningUpdates \
+		-scheme $(APP) \
+		-destination 'generic/platform=macOS' \
+		-configuration Release archive \
+		ONLY_ACTIVE_ARCH=NO \
+		-archivePath "$(BUILD_PATH)/$(APP).xcarchive"
 
 	echo "Application built, starting the export archive..."
 
 	xcodebuild -exportArchive \
-  		-exportOptionsPlist "$(PWD)/exportOptions.plist" \
-  		-archivePath $(BUILD_PATH)/$(APP).xcarchive \
-  		-exportPath $(BUILD_PATH)
+		-allowProvisioningUpdates \
+		-exportOptionsPlist "$(PWD)/exportOptions.plist" \
+		-archivePath "$(BUILD_PATH)/$(APP).xcarchive" \
+		-exportPath "$(BUILD_PATH)"
 
+	python3 scripts/verify-distribution.py github $(APP_PATH) --signed
 	ditto -c -k --keepParent $(APP_PATH) $(ZIP_PATH)
 
 	echo "Project archived successfully"
@@ -38,7 +50,7 @@ notarize:
 
 	xcrun notarytool submit --keychain-profile "AC_PASSWORD" --wait $(ZIP_PATH)
 
-	echo "Stats successfully notarized"
+	echo "Custer successfully notarized"
 
 sign:
 	echo "Going to staple an application..."
@@ -69,22 +81,43 @@ prepare-dmg:
 
 prepare-dSYM:
 	echo "Zipping dSYMs..."
-	cd $(BUILD_PATH)/Custer.xcarchive/dSYMs && zip -r $(PWD)/dSYMs.zip .
+	cd "$(BUILD_PATH)/Custer.xcarchive/dSYMs" && zip -r "$(PWD)/dSYMs.zip" .
 	echo "Created zip with dSYMs"
 
 # --- HELPERS --- #
 
 clean:
-	rm -rf $(BUILD_PATH)
+	rm -rf "$(BUILD_PATH)"
 	if [ -a $(PWD)/dSYMs.zip ]; then rm $(PWD)/dSYMs.zip; fi;
 	if [ -a $(PWD)/Custer.dmg ]; then rm $(PWD)/Custer.dmg; fi;
 
-next-version:
-	versionNumber=$$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" "$(PWD)/Custer/Supporting Files/Info.plist") ;\
-	echo "Actual version is: $$versionNumber" ;\
-	versionNumber=$$((versionNumber + 1)) ;\
-	echo "Next version is: $$versionNumber" ;\
-	/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $$versionNumber" "$(PWD)/Custer/Supporting Files/Info.plist" ;\
+# Archive, verify, and upload the build to App Store Connect.
+release-appstore:
+	xcodebuild -project Custer.xcodeproj -scheme "Custer App Store" \
+		-allowProvisioningUpdates \
+		-destination 'generic/platform=macOS' -configuration Release archive \
+		ONLY_ACTIVE_ARCH=NO -archivePath "$(APPSTORE_PATH)/Custer.xcarchive"
+	python3 scripts/verify-distribution.py appstore \
+		"$(APPSTORE_PATH)/Custer.xcarchive/Products/Applications/Custer App Store.app" --signed
+	xcodebuild -exportArchive -exportOptionsPlist exportOptions-appstore.plist \
+		-allowProvisioningUpdates \
+		-archivePath "$(APPSTORE_PATH)/Custer.xcarchive" -exportPath "$(APPSTORE_PATH)/export"
+
+verify-builds:
+	xcodebuild -project Custer.xcodeproj -scheme Custer -configuration Release \
+		-derivedDataPath build/check-github CODE_SIGNING_ALLOWED=NO ONLY_ACTIVE_ARCH=NO build
+	xcodebuild -project Custer.xcodeproj -scheme "Custer App Store" -configuration Release \
+		-derivedDataPath build/check-store CODE_SIGNING_ALLOWED=NO ONLY_ACTIVE_ARCH=NO build
+	python3 scripts/verify-distribution.py github build/check-github/Build/Products/Release/Custer.app
+	python3 scripts/verify-distribution.py appstore "build/check-store/Build/Products/Release/Custer App Store.app"
+
+test:
+	mkdir -p build/tests
+	xcrun swiftc -parse-as-library -module-cache-path build/tests/module-cache \
+		Custer/helpers/StreamResolver.swift Custer/helpers/libs.swift tests/StreamResolverTests.swift -o build/tests/StreamResolverTests
+	xcrun swiftc -parse-as-library -D APP_STORE -module-cache-path build/tests/module-cache \
+		Custer/helpers/StreamResolver.swift Custer/helpers/libs.swift tests/StreamResolverTests.swift -o build/tests/StreamResolverStoreTests
+	python3 tests/run.py build/tests/StreamResolverTests build/tests/StreamResolverStoreTests
 
 check:
 	xcrun notarytool log $(ID) --keychain-profile "AC_PASSWORD"
@@ -98,5 +131,5 @@ open:
 
 # --- WEB --- #
 
-deploy-web:
-	npx wrangler pages deploy ./web --project-name custer --branch master --commit-dirty=true
+deploy-site:
+	npx wrangler pages deploy ./site --project-name custer --branch master --commit-dirty=true

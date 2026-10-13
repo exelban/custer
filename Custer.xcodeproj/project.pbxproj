@@ -18,6 +18,18 @@
 		9AC0FFEE0001000000000001 /* Custer.icon in Resources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE0001000000000002 /* Custer.icon */; };
 		9AC88F7626F7C67A00F8AE3C /* Reachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC88F7526F7C67A00F8AE3C /* Reachability.swift */; };
 		9AC88F7C26F7D05900F8AE3C /* menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC88F7B26F7D05800F8AE3C /* menu.swift */; };
+		C057E2000000000000000002 /* StreamResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C057E2000000000000000001 /* StreamResolver.swift */; };
+		C057E2000000000000000004 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C057E2000000000000000003 /* PrivacyInfo.xcprivacy */; };
+		C057E2000000000000000009 /* StreamResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C057E2000000000000000001 /* StreamResolver.swift */; };
+		C057E200000000000000000A /* player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A7921BC248D247E00788F2B /* player.swift */; };
+		C057E200000000000000000B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A7921AA248D199400788F2B /* AppDelegate.swift */; };
+		C057E200000000000000000C /* Reachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC88F7526F7C67A00F8AE3C /* Reachability.swift */; };
+		C057E200000000000000000D /* menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC88F7B26F7D05800F8AE3C /* menu.swift */; };
+		C057E200000000000000000E /* libs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A7921C0248D518400788F2B /* libs.swift */; };
+		C057E2000000000000000011 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C057E2000000000000000003 /* PrivacyInfo.xcprivacy */; };
+		C057E2000000000000000012 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9A7921AC248D199400788F2B /* Assets.xcassets */; };
+		C057E2000000000000000013 /* Custer.icon in Resources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE0001000000000002 /* Custer.icon */; };
+		C057E2000000000000000014 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9A7921B9248D1BE800788F2B /* MainMenu.xib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -55,6 +67,10 @@
 		9AC0FFEE0001000000000002 /* Custer.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = Custer.icon; sourceTree = "<group>"; };
 		9AC88F7526F7C67A00F8AE3C /* Reachability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reachability.swift; sourceTree = "<group>"; };
 		9AC88F7B26F7D05800F8AE3C /* menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = menu.swift; sourceTree = "<group>"; };
+		C057E2000000000000000001 /* StreamResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamResolver.swift; sourceTree = "<group>"; };
+		C057E2000000000000000003 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		C057E2000000000000000005 /* AppStore.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AppStore.entitlements; sourceTree = "<group>"; };
+		C057E2000000000000000007 /* Custer App Store.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Custer App Store.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -63,6 +79,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				9AA4F5F826FFBC860086DD54 /* Updater in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C057E200000000000000000F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -80,6 +103,7 @@
 		9A7921A8248D199400788F2B /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				C057E2000000000000000007 /* Custer App Store.app */,
 				9A7921A7248D199400788F2B /* Custer.app */,
 			);
 			name = Products;
@@ -100,6 +124,8 @@
 		9A7921BB248D1C0200788F2B /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				C057E2000000000000000005 /* AppStore.entitlements */,
+				C057E2000000000000000003 /* PrivacyInfo.xcprivacy */,
 				9AC0FFEE0001000000000002 /* Custer.icon */,
 				9A7921AC248D199400788F2B /* Assets.xcassets */,
 				9A7921B1248D199400788F2B /* Info.plist */,
@@ -111,6 +137,7 @@
 		9AC88F8726F7D93600F8AE3C /* helpers */ = {
 			isa = PBXGroup;
 			children = (
+				C057E2000000000000000001 /* StreamResolver.swift */,
 				9AC88F7526F7C67A00F8AE3C /* Reachability.swift */,
 				9A7921C0248D518400788F2B /* libs.swift */,
 				9AA4F60526FFC4EC0086DD54 /* updater.sh */,
@@ -141,6 +168,25 @@
 			);
 			productName = Custer;
 			productReference = 9A7921A7248D199400788F2B /* Custer.app */;
+			productType = "com.apple.product-type.application";
+		};
+		C057E2000000000000000018 /* Custer App Store */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C057E2000000000000000017 /* Build configuration list for PBXNativeTarget "Custer App Store" */;
+			buildPhases = (
+				C057E2000000000000000008 /* Sources */,
+				C057E200000000000000000F /* Frameworks */,
+				C057E2000000000000000010 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Custer App Store";
+			packageProductDependencies = (
+			);
+			productName = "Custer App Store";
+			productReference = C057E2000000000000000007 /* Custer App Store.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -175,6 +221,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				C057E2000000000000000018 /* Custer App Store */,
 				9A7921A6248D199400788F2B /* Custer */,
 			);
 		};
@@ -185,10 +232,22 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C057E2000000000000000004 /* PrivacyInfo.xcprivacy in Resources */,
 				9A7921AD248D199400788F2B /* Assets.xcassets in Resources */,
 				9AC0FFEE0001000000000001 /* Custer.icon in Resources */,
 				9AA4F60626FFC4EC0086DD54 /* updater.sh in Resources */,
 				9A7921BA248D1BE800788F2B /* MainMenu.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C057E2000000000000000010 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C057E2000000000000000011 /* PrivacyInfo.xcprivacy in Resources */,
+				C057E2000000000000000012 /* Assets.xcassets in Resources */,
+				C057E2000000000000000013 /* Custer.icon in Resources */,
+				C057E2000000000000000014 /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -199,11 +258,25 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C057E2000000000000000002 /* StreamResolver.swift in Sources */,
 				9A7921BD248D247E00788F2B /* player.swift in Sources */,
 				9A7921AB248D199400788F2B /* AppDelegate.swift in Sources */,
 				9AC88F7626F7C67A00F8AE3C /* Reachability.swift in Sources */,
 				9AC88F7C26F7D05900F8AE3C /* menu.swift in Sources */,
 				9A7921C1248D518400788F2B /* libs.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C057E2000000000000000008 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C057E2000000000000000009 /* StreamResolver.swift in Sources */,
+				C057E200000000000000000A /* player.swift in Sources */,
+				C057E200000000000000000B /* AppDelegate.swift in Sources */,
+				C057E200000000000000000C /* Reachability.swift in Sources */,
+				C057E200000000000000000D /* menu.swift in Sources */,
+				C057E200000000000000000E /* libs.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -343,16 +416,16 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 30;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
-				INFOPLIST_FILE = "custer/Supporting Files/Info.plist";
+				INFOPLIST_FILE = "Custer/Supporting Files/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
-				MARKETING_VERSION = 1.5.0;
+				MARKETING_VERSION = 1.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = eu.exelban.custer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -367,18 +440,70 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 30;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
-				INFOPLIST_FILE = "custer/Supporting Files/Info.plist";
+				INFOPLIST_FILE = "Custer/Supporting Files/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
-				MARKETING_VERSION = 1.5.0;
+				MARKETING_VERSION = 1.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = eu.exelban.custer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		C057E2000000000000000015 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = Custer;
+				CODE_SIGN_ENTITLEMENTS = "Custer/Supporting Files/AppStore.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 30;
+				DEAD_CODE_STRIPPING = YES;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = "Custer/Supporting Files/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MARKETING_VERSION = 1.6.0;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.exelban.custer;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) APP_STORE";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		C057E2000000000000000016 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = Custer;
+				CODE_SIGN_ENTITLEMENTS = "Custer/Supporting Files/AppStore.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 30;
+				DEAD_CODE_STRIPPING = YES;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = "Custer/Supporting Files/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MARKETING_VERSION = 1.6.0;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.exelban.custer;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) APP_STORE";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -400,6 +525,15 @@
 			buildConfigurations = (
 				9A7921B6248D199400788F2B /* Debug */,
 				9A7921B7248D199400788F2B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C057E2000000000000000017 /* Build configuration list for PBXNativeTarget "Custer App Store" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C057E2000000000000000015 /* Debug */,
+				C057E2000000000000000016 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
